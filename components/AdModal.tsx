@@ -86,6 +86,7 @@ export const AdModal: React.FC<AdModalProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onToggleFavorite(variant.id)}
+                  aria-label="Ajouter aux favoris"
                   className={`p-2 rounded-full border ${
                     variant.favorite
                       ? 'bg-rose-500/20 text-rose-200 border-rose-400/40'
@@ -96,6 +97,7 @@ export const AdModal: React.FC<AdModalProps> = ({
                 </button>
                 <button
                   onClick={onClose}
+                  aria-label="Fermer"
                   className="p-2 rounded-full border border-zinc-700 text-zinc-400 hover:text-white"
                 >
                   <X className="w-4 h-4" />
@@ -131,6 +133,9 @@ export const AdModal: React.FC<AdModalProps> = ({
                     </Button>
                   </div>
                 </div>
+                <p className="text-[11px] text-zinc-500 mb-3">
+                  Safe zone: haut {safeZone.top}% · bas {safeZone.bottom}% · côtés {safeZone.side}%.
+                </p>
                 {variant.visualSvg ? (
                   <div className="relative rounded-xl overflow-hidden border border-zinc-800 bg-white">
                     <img
@@ -166,6 +171,7 @@ export const AdModal: React.FC<AdModalProps> = ({
                     <p className="text-xs uppercase tracking-[0.3em] text-zinc-400">Primary Text</p>
                     <button
                       onClick={() => copyToClipboard(variant.primaryText)}
+                      aria-label="Copier le texte principal"
                       className="text-xs text-emerald-300 flex items-center gap-1"
                     >
                       <Copy className="w-3 h-3" /> Copier

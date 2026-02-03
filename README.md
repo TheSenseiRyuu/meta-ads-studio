@@ -28,3 +28,8 @@ L’app démarre sur `http://localhost:5173` et l’API sur `http://localhost:87
 ## Notes
 - L’API utilise Gemini CLI en mode headless JSON.
 - Aucun appel direct à l’API Gemini depuis le front-end.
+
+## Tests
+```bash
+npm run test
+```

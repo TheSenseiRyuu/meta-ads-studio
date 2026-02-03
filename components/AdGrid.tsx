@@ -81,6 +81,7 @@ export const AdGrid: React.FC<AdGridProps> = ({
             exit="exit"
             onClick={() => onSelect(variant)}
             className="group cursor-pointer rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-5 shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 transition-all"
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '240px' }}
           >
             <div className="flex items-center justify-between text-xs text-zinc-400 mb-4">
               <span className="uppercase tracking-[0.3em]">{variant.placement}</span>
@@ -89,6 +90,7 @@ export const AdGrid: React.FC<AdGridProps> = ({
                   event.stopPropagation();
                   onToggleFavorite(variant.id);
                 }}
+                aria-label="Ajouter aux favoris"
                 className={`p-2 rounded-full border transition-colors ${
                   variant.favorite
                     ? 'bg-rose-500/20 text-rose-200 border-rose-400/40'
@@ -100,6 +102,11 @@ export const AdGrid: React.FC<AdGridProps> = ({
             </div>
 
             <h3 className="text-lg text-white font-display mb-2">{variant.name}</h3>
+            {variant.visualSvg && (
+              <span className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.3em] text-emerald-200 mb-3">
+                Visual prêt
+              </span>
+            )}
             <p className="text-sm text-zinc-300 line-clamp-3 mb-4">
               {variant.primaryText}
             </p>

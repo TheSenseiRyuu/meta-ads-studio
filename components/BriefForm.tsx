@@ -273,7 +273,17 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
                 className="mt-3 w-full accent-emerald-400"
               />
             </label>
-            <div className="text-2xl font-display text-white">{brief.variants}</div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-2xl font-display text-white">{brief.variants}</div>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={brief.variants}
+                onChange={(e) => updateField('variants', Number(e.target.value))}
+                className="w-20 rounded-lg border border-zinc-800 bg-zinc-900/70 px-2 py-1 text-xs text-white focus:border-emerald-400 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
       </div>

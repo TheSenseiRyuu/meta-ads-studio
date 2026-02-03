@@ -122,6 +122,16 @@ export const InsightBoard: React.FC<InsightBoardProps> = ({ strategy, qa }) => {
                 <li key={index}>{item}</li>
               ))}
             </ul>
+            {qa.suggestions?.length > 0 && (
+              <div className="mt-4 border-t border-amber-400/20 pt-3 text-xs uppercase tracking-[0.3em] text-amber-200">
+                Suggestions
+                <ul className="mt-2 space-y-2 text-sm normal-case text-amber-100">
+                  {qa.suggestions.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -10,8 +10,9 @@ export const buildPrompt = (brief) => {
   const aspectRatio = sanitize(brief.aspectRatio || 'Auto');
 
   return `
-Tu es un directeur créatif senior spécialisé en Meta Ads.
-Objectif: générer une stratégie et ${variants} variantes d'annonces prêtes à publier.
+Tu es un directeur créatif senior + performance marketer spécialisé en Meta Ads.
+Objectif: générer une stratégie haut de gamme et EXACTEMENT ${variants} variantes d'annonces prêtes à publier.
+Niveau de qualité attendu: premium, conversion-ready, stop-scroll.
 
 BRIEF:
 - Marque: ${sanitize(brief.brandName)}
@@ -33,7 +34,9 @@ BRIEF:
 
 RÈGLES IMPORTANTES:
 - Respecter les politiques Meta Ads (pas d'attributs personnels, pas de promesses médicales, pas de claims non prouvés).
-- Chaque variante doit proposer un angle unique.
+- Éviter les formulations sensibles: “avant/après”, “garanti”, “miracle”, “tu as”.
+- Chaque variante doit proposer un angle unique + un hook distinct.
+- Distribuer les placements si plusieurs sont sélectionnés.
 - Écrire en ${language}.
 - Retourner UNIQUEMENT du JSON valide. Pas de markdown, pas de commentaires.
 
@@ -76,10 +79,20 @@ FORMAT JSON STRICT (respecter les clés et types) :
 }
 
 Consignes pour les variants:
-- primaryText: 2 à 4 phrases max.
-- headline: court, punchy, orienté bénéfice.
-- description: 1 phrase.
-- imagePrompt: préciser angle, composition, style, placement.
+- primaryText: 90-160 caractères OU 2-3 phrases courtes max, sans saut de ligne.
+- headline: 4-7 mots, bénéfice clair.
+- description: 1 phrase courte (< 18 mots).
+- hook: 6-10 mots max (stop-scroll).
+- imagePrompt: ultra détaillé (sujet, contexte, composition, palette, lumière, style, safe zone).
+- visualConcept: 1-2 phrases, focalisé sur la mise en page publicitaire.
+- keywords: 5-8 mots-clés actionnables.
 - cta: choisir parmi "Shop Now", "Learn More", "Sign Up", "Get Quote", "Download".
+
+Consignes qualité imagePrompt:
+- Mentionner l’aspect ratio ${aspectRatio} et le placement.
+- Décrire un design publicitaire premium: hiérarchie claire (headline, subline, CTA), zone produit, espace respirant.
+- Spécifier la palette (2-3 couleurs), textures, matériaux, profondeur (ombres douces, lumière directionnelle).
+- Indiquer “safe zones” (zones vides en haut/bas/côtés).
+- Format: une seule ligne de texte (pas de listes).
 `;
 };

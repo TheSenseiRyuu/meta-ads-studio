@@ -225,13 +225,24 @@ const App: React.FC = () => {
           <div className="absolute top-20 right-0 w-96 h-96 bg-cyan-500/10 blur-[140px]" />
         </div>
 
-        <header className="relative z-10 px-6 md:px-12 py-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
+        <header className="relative z-10 px-6 md:px-12 py-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between max-w-[1400px] mx-auto">
+          <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
-            <h1 className="text-3xl md:text-4xl font-display">Production d’Ads via Gemini CLI</h1>
+            <h1 className="text-3xl md:text-4xl font-display">Production d’Ads premium via Gemini CLI</h1>
             <p className="text-sm text-zinc-400 mt-2">
-              Unifie les flows des 3 projets pour livrer des créations Meta Ads prêtes à scaler.
+              Unifie les flows des 3 projets pour livrer des créations Meta Ads haut de gamme, prêtes à scaler.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-100">
+                Ratio: {brief.aspectRatio}
+              </span>
+              <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-cyan-100">
+                Placements: {brief.placements.join(', ')}
+              </span>
+              <span className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-zinc-200">
+                Variantes: {brief.variants}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-300">
@@ -248,7 +259,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <main className="relative z-10 px-6 md:px-12 pb-16 grid grid-cols-1 xl:grid-cols-[1.2fr_1.8fr] gap-8">
+        <main className="relative z-10 px-6 md:px-12 pb-16 grid grid-cols-1 xl:grid-cols-[1.2fr_1.8fr] gap-8 max-w-[1400px] mx-auto">
           <section className="space-y-6">
             <BriefForm brief={brief} onChange={setBrief} onGenerate={handleGenerate} isGenerating={isGenerating} />
 

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { buildPrompt } from './promptBuilder.js';
+import { buildVisualPrompt, PLACEMENTS } from './visualSpec.js';
 
 dotenv.config({ path: '.env.local' });
 dotenv.config();
@@ -43,6 +44,45 @@ const parseJsonSafe = (text) => {
     }
     return null;
   }
+};
+
+const createId = () => {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+const normalizeVariants = (data, brief) => {
+  if (!data?.variants || !Array.isArray(data.variants)) return data;
+  const fallbackPlacement = brief?.placements?.[0] || 'Feed';
+  const allowedCtas = new Set(['Shop Now', 'Learn More', 'Sign Up', 'Get Quote', 'Download']);
+
+  return {
+    ...data,
+    variants: data.variants.map((variant, index) => {
+      const placement = PLACEMENTS.includes(variant.placement) ? variant.placement : fallbackPlacement;
+      const format = variant.format || `${placement} · ${brief?.aspectRatio || 'Auto'}`;
+      const keywords = Array.isArray(variant.keywords)
+        ? variant.keywords
+        : String(variant.keywords || '')
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+      return {
+        ...variant,
+        id: variant.id || `${createId()}-${index + 1}`,
+        placement,
+        format,
+        keywords,
+        cta: allowedCtas.has(variant.cta) ? variant.cta : 'Learn More',
+        offer: variant.offer || '',
+        proof: variant.proof || '',
+        visualConcept: variant.visualConcept || `${variant.headline} - ${variant.primaryText}`,
+        imagePrompt: variant.imagePrompt || `${variant.visualConcept} ${variant.primaryText}`,
+      };
+    }),
+  };
 };
 
 const runGemini = async ({ prompt, model, responseType = 'json' }) => {
@@ -108,8 +148,9 @@ app.post('/api/generate', async (req, res) => {
     const prompt = buildPrompt(brief);
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const responseJson = await runGemini({ prompt, model, responseType: 'json' });
+    const normalized = normalizeVariants(responseJson, brief);
 
-    return res.json(responseJson);
+    return res.json(normalized);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -132,73 +173,15 @@ app.post('/api/generate-visual', async (req, res) => {
     }
 
     const placement = variant.placement || 'Feed';
-    const placementDimensions = {
-      Feed: { width: 1080, height: 1350 },
-      Reels: { width: 1080, height: 1920 },
-      Stories: { width: 1080, height: 1920 },
-      Explore: { width: 1080, height: 1080 },
-      Messenger: { width: 1200, height: 628 },
-    };
-    const ratioDimensions = {
-      '1:1': { width: 1080, height: 1080 },
-      '4:5': { width: 1080, height: 1350 },
-      '9:16': { width: 1080, height: 1920 },
-      '1.91:1': { width: 1200, height: 628 },
-    };
-
     const normalizedRatio = typeof aspectRatio === 'string' ? aspectRatio : 'Auto';
-    const size =
-      normalizedRatio !== 'Auto' && ratioDimensions[normalizedRatio]
-        ? ratioDimensions[normalizedRatio]
-        : placementDimensions[placement] || placementDimensions.Feed;
-
-    const getSafeZone = () => {
-      if (normalizedRatio === '9:16' || placement === 'Stories' || placement === 'Reels') {
-        return { top: 12, bottom: 20, side: 6 };
-      }
-      if (normalizedRatio === '4:5' || placement === 'Feed') {
-        return { top: 8, bottom: 10, side: 6 };
-      }
-      if (normalizedRatio === '1:1' || placement === 'Explore') {
-        return { top: 8, bottom: 8, side: 8 };
-      }
-      if (normalizedRatio === '1.91:1' || placement === 'Messenger') {
-        return { top: 10, bottom: 10, side: 8 };
-      }
-      return { top: 8, bottom: 8, side: 8 };
-    };
-    const safeZone = getSafeZone();
-    const prompt = `
-Tu es un designer senior spécialisé Meta Ads.
-Crée un VISUEL publicitaire sous forme de SVG.
-Le SVG doit être complet, autonome, et sans ressources externes.
-
-MARQUE: ${brandName || ''}
-PRODUIT: ${productName || ''}
-PLACEMENT: ${placement}
-ASPECT RATIO: ${normalizedRatio}
-OBJECTIF: ${variant.objective}
-TON: ${variant.tone}
-LANGUE: ${language || 'Français'}
-
-COPIES:
-- Headline: ${variant.headline}
-- Primary text: ${variant.primaryText}
-- Offer: ${variant.offer || ''}
-- Proof: ${variant.proof || ''}
-- CTA: ${variant.cta}
-
-CONCEPT: ${variant.visualConcept}
-PROMPT IMAGE: ${variant.imagePrompt}
-
-SPÉCIFICATIONS:
-    - Taille: ${size.width}x${size.height}.
-    - Inclure un fond élégant, un espace produit (placeholder graphique), et une zone texte lisible.
-    - SAFE ZONE: laisser vides ${safeZone.top}% en haut, ${safeZone.bottom}% en bas, ${safeZone.side}% sur les côtés (pas de textes/logos critiques).
-    - Utiliser des formes vectorielles simples, gradients doux, typographie lisible.
-- Ne pas inclure d'images externes ni de textes personnels.
-- Sortir UNIQUEMENT le SVG (commence par <svg> et finit par </svg>).
-`;
+    const prompt = buildVisualPrompt({
+      variant,
+      brandName,
+      productName,
+      language,
+      aspectRatio: normalizedRatio,
+      placement,
+    });
 
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const responseText = await runGemini({ prompt, model, responseType: 'text' });
