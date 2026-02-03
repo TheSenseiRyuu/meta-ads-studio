@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { Client, Concept, Batch, AdVariant } from '../types';
 import { InsightBoard } from '../components/InsightBoard';
 import { AdGrid } from '../components/AdGrid';
@@ -36,7 +35,6 @@ const BatchPage: React.FC<BatchPageProps> = ({
   loadingStep,
   loadingHints,
 }) => {
-  const navigate = useNavigate();
   const context = useMemo(
     () => ({ clientId: client.id, conceptId: concept.id, batchId: batch.id }),
     [client.id, concept.id, batch.id]
@@ -44,28 +42,6 @@ const BatchPage: React.FC<BatchPageProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          <Link to="/" className="hover:text-white">Clients</Link>
-          <span>/</span>
-          <button
-            onClick={() => navigate(`/client/${client.id}`)}
-            className="hover:text-white text-zinc-400"
-          >
-            {client.name}
-          </button>
-          <span>/</span>
-          <button
-            onClick={() => navigate(`/client/${client.id}/concept/${concept.id}`)}
-            className="hover:text-white text-zinc-400"
-          >
-            {concept.name}
-          </button>
-          <span>/</span>
-          <span className="text-zinc-300">{batch.name}</span>
-        </div>
-      </div>
-
       <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

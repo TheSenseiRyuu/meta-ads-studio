@@ -7,7 +7,6 @@ import {
   Link,
   useLocation,
   useParams,
-  useNavigate,
 } from 'react-router-dom';
 import IntroScreen from './components/IntroScreen';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -20,8 +19,6 @@ import BatchPage from './pages/BatchPage';
 import {
   generateAds,
   generateVisual,
-  getHealth,
-  HealthStatus,
   setSettings,
   getModels,
   ModelsResponse,
@@ -38,7 +35,7 @@ import {
   Batch,
 } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { RefreshCw, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { createId } from './utils/id';
 
 const defaultBrief: BrandBrief = {
@@ -178,7 +175,6 @@ const AppShell: React.FC = () => {
   const [selectedContext, setSelectedContext] = useState<{ clientId: string; conceptId: string; batchId: string } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [health, setHealth] = useState<HealthStatus | null>(null);
   const [settings, setSettingsState] = useLocalStorage<GeminiSettings>('meta-ads-settings', defaultSettings);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -190,7 +186,6 @@ const AppShell: React.FC = () => {
   const [visualBatchLoading, setVisualBatchLoading] = useState(false);
 
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     setSelectedVariant(null);
@@ -230,19 +225,6 @@ const AppShell: React.FC = () => {
     const concept = client?.concepts.find((item) => item.id === selectedContext.conceptId);
     return concept || null;
   }, [selectedContext, workspace.clients]);
-
-  useEffect(() => {
-    getHealth()
-      .then(setHealth)
-      .catch(() =>
-        setHealth({
-          cliAvailable: false,
-          apiKeyPresent: false,
-          model: 'gemini-2.5-flash',
-          message: 'Gemini API not reachable.',
-        })
-      );
-  }, []);
 
   useEffect(() => {
     if (!settings.apiKey) return;
@@ -629,65 +611,44 @@ const AppShell: React.FC = () => {
     setSelectedContext(context);
   };
 
-  const metaStatus = useMemo(() => {
-    if (!health) return 'Checking Gemini API...';
-    if (!health.cliAvailable) return 'Gemini API indisponible';
-    if (!health.apiKeyPresent) return 'Clé API manquante';
-    return `Gemini API ${health.cliVersion || ''}`.trim();
-  }, [health]);
-
-  const stats = useMemo(() => {
-    const clients = workspace.clients.length;
-    const concepts = workspace.clients.reduce((sum, client) => sum + client.concepts.length, 0);
-    const batches = workspace.clients.reduce(
-      (sum, client) => sum + client.concepts.reduce((acc, concept) => acc + concept.batches.length, 0),
-      0
-    );
-    const variants = workspace.clients.reduce(
-      (sum, client) =>
-        sum +
-        client.concepts.reduce(
-          (acc, concept) => acc + concept.batches.reduce((inner, batch) => inner + batch.variants.length, 0),
-          0
-        ),
-      0
-    );
-    return { clients, concepts, batches, variants };
-  }, [workspace.clients]);
-
-  const step = useMemo(() => {
-    if (location.pathname.includes('/batch/')) return 4;
-    if (location.pathname.includes('/concept/')) return 3;
-    if (location.pathname.includes('/client/')) return 2;
-    return 1;
+  const routeType = useMemo(() => {
+    if (location.pathname.includes('/batch/')) return 'batch';
+    if (location.pathname.includes('/concept/')) return 'concept';
+    if (location.pathname.includes('/client/')) return 'client';
+    return 'clients';
   }, [location.pathname]);
 
-  const steps = [
-    { label: 'Clients', path: '/' },
-    {
-      label: 'Client',
-      path: activeClient ? `/client/${activeClient.id}` : null,
-    },
-    {
-      label: 'Concept',
-      path: activeClient && activeConcept ? `/client/${activeClient.id}/concept/${activeConcept.id}` : null,
-    },
-    {
-      label: 'Batch',
-      path:
-        activeClient && activeConcept && activeBatch
-          ? `/client/${activeClient.id}/concept/${activeConcept.id}/batch/${activeBatch.id}`
-          : null,
-    },
-  ];
+  const headerTitle = useMemo(() => {
+    if (routeType === 'client') return `Client: ${activeClient?.name || 'Client'}`;
+    if (routeType === 'concept') return `Concept: ${activeConcept?.name || 'Concept'}`;
+    if (routeType === 'batch') return `Batch: ${activeBatch?.name || 'Batch'}`;
+    return 'Clients';
+  }, [routeType, activeClient?.name, activeConcept?.name, activeBatch?.name]);
+
+  const headerSubtitle = useMemo(() => {
+    if (routeType === 'clients') return '';
+    if (routeType === 'client') return 'Profil & espaces créa du client.';
+    if (routeType === 'concept') return 'Brief + batches du concept sélectionné.';
+    return 'Stratégie, ads et visuels du batch sélectionné.';
+  }, [routeType]);
+
+  const backPath = useMemo(() => {
+    if (routeType === 'batch' && activeClient && activeConcept) {
+      return `/client/${activeClient.id}/concept/${activeConcept.id}`;
+    }
+    if (routeType === 'concept' && activeClient) {
+      return `/client/${activeClient.id}`;
+    }
+    if (routeType === 'client') return '/';
+    return null;
+  }, [routeType, activeClient?.id, activeConcept?.id]);
+
 
   const handleSaveSettings = async (nextSettings: GeminiSettings) => {
     setIsSavingSettings(true);
     setError(null);
     try {
       await setSettings(nextSettings);
-      const updatedHealth = await getHealth();
-      setHealth(updatedHealth);
       setShowSettings(false);
       if (nextSettings.apiKey) {
         setIsLoadingModels(true);
@@ -726,7 +687,6 @@ const AppShell: React.FC = () => {
     }, [clientId]);
     return (
       <ClientPage
-        clients={workspace.clients}
         client={client}
         onUpdateClient={updateClient}
         onCreateConcept={handleCreateConcept}
@@ -810,93 +770,27 @@ const AppShell: React.FC = () => {
           <div className="absolute top-20 right-0 w-96 h-96 bg-cyan-500/10 blur-[140px]" />
         </div>
 
-        <header className="relative z-10 px-6 md:px-12 py-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between max-w-[1600px] mx-auto">
+        <header className="relative z-10 px-6 md:px-12 py-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between max-w-[1200px] mx-auto">
           <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
-            <h1 className="text-3xl md:text-4xl font-display">Studio multi-clients pour Meta Ads</h1>
-            <p className="text-sm text-zinc-400 mt-2">
-              Configure tes clients, structure tes concepts, puis lance des batches d’ads et visuels premium via Gemini API.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <Link
-                to="/"
-                className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-zinc-300 hover:border-emerald-400/50"
-              >
-                Tous les clients
-              </Link>
-              {step >= 2 && activeClient && (
+            <h1 className="text-3xl md:text-4xl font-display">{headerTitle}</h1>
+            {headerSubtitle && (
+              <p className="text-sm text-zinc-400 mt-2">{headerSubtitle}</p>
+            )}
+            {backPath && (
+              <div className="mt-4">
                 <Link
-                  to={`/client/${activeClient.id}`}
-                  className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-100"
-                >
-                  Client: {activeClient.name}
-                </Link>
-              )}
-              {step >= 3 && activeClient && activeConcept && (
-                <Link
-                  to={`/client/${activeClient.id}/concept/${activeConcept.id}`}
-                  className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-cyan-100"
-                >
-                  Concept: {activeConcept.name}
-                </Link>
-              )}
-              {step >= 4 && activeBatch && (
-                <span className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-zinc-200">
-                  Batch: {activeBatch.name}
-                </span>
-              )}
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-zinc-500 uppercase tracking-[0.3em] text-[10px]">Navigation</span>
-              {steps.map((item, index) => {
-                const isActive = step === index + 1;
-                const isEnabled = Boolean(item.path);
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => item.path && navigate(item.path)}
-                    disabled={!isEnabled}
-                    className={`rounded-full border px-3 py-1 transition-colors ${
-                      isActive
-                        ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100'
-                        : 'border-zinc-800 text-zinc-400 hover:border-emerald-400/40'
-                    } ${!isEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                  >
-                    {index + 1}. {item.label}
-                  </button>
-                );
-              })}
-              {step > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const prev = steps[step - 2];
-                    if (prev?.path) navigate(prev.path);
-                  }}
+                  to={backPath}
+                  className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-xs text-zinc-300 hover:border-emerald-400/50"
                 >
                   Retour
-                </Button>
-              )}
-            </div>
+                </Link>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-300">
-              {metaStatus}
-            </div>
-            <div className="hidden lg:block text-[10px] text-zinc-500">
-              {settings.textModel} · {settings.imageModel} · {settings.imageSize}
-            </div>
             <Button
-              variant="outline"
-              size="sm"
-              icon={<RefreshCw className="w-4 h-4" />}
-              onClick={() => window.location.reload()}
-            >
-              Reset
-            </Button>
-            <Button
-              variant="secondary"
+              variant="ghost"
               size="sm"
               icon={<Settings className="w-4 h-4" />}
               onClick={() => {
@@ -906,7 +800,7 @@ const AppShell: React.FC = () => {
                 }
               }}
             >
-              Settings
+              <span className="sr-only">Settings</span>
             </Button>
           </div>
         </header>
@@ -928,7 +822,6 @@ const AppShell: React.FC = () => {
                   clients={workspace.clients}
                   onCreateClient={handleCreateClient}
                   onSelectClient={handleSelectClient}
-                  stats={stats}
                 />
               }
             />
