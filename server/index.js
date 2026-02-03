@@ -33,6 +33,50 @@ const parseJsonSafe = (text) => {
   }
 };
 
+const parseRetryDelaySeconds = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    const match = value.match(/(\d+)/);
+    return match ? Number(match[1]) : null;
+  }
+  if (typeof value === 'number') return value;
+  return null;
+};
+
+const formatGeminiError = (error) => {
+  const status = error?.status || error?.code;
+  const rawMessage = error?.message || '';
+  let details;
+  try {
+    if (rawMessage.trim().startsWith('{')) {
+      details = JSON.parse(rawMessage);
+    }
+  } catch {
+    details = null;
+  }
+  const errorPayload = details?.error || {};
+  const retryInfo = (errorPayload.details || []).find(
+    (item) => item['@type'] === 'type.googleapis.com/google.rpc.RetryInfo'
+  );
+  const retryDelay = parseRetryDelaySeconds(retryInfo?.retryDelay);
+
+  if (status === 429 || errorPayload.status === 'RESOURCE_EXHAUSTED' || /quota/i.test(rawMessage)) {
+    return {
+      status: 429,
+      message:
+        'Quota Gemini dépassé. Vérifie ton plan/billing ou réessaie plus tard.' +
+        (retryDelay ? ` Réessaie dans ${retryDelay}s.` : ''),
+      retryAfter: retryDelay,
+    };
+  }
+
+  return {
+    status: 500,
+    message: rawMessage || 'Erreur Gemini API.',
+    retryAfter: null,
+  };
+};
+
 const createId = () => {
   if (globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID();
@@ -219,8 +263,12 @@ app.post('/api/generate', async (req, res) => {
     return res.json(normalized);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: error?.message || 'Erreur Gemini API.',
+    const formatted = formatGeminiError(error);
+    if (formatted.retryAfter) {
+      res.set('Retry-After', String(formatted.retryAfter));
+    }
+    return res.status(formatted.status).json({
+      message: formatted.message,
     });
   }
 });
@@ -271,8 +319,12 @@ app.post('/api/generate-visual', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: error?.message || 'Erreur génération image.',
+    const formatted = formatGeminiError(error);
+    if (formatted.retryAfter) {
+      res.set('Retry-After', String(formatted.retryAfter));
+    }
+    return res.status(formatted.status).json({
+      message: formatted.message,
     });
   }
 });

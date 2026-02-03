@@ -636,7 +636,7 @@ const AppShell: React.FC = () => {
     const batch = concept?.batches.find((item) => item.id === batchId);
     if (!client || !concept || !batch) {
       setError('Sélectionne un brief pour lancer la génération.');
-      return;
+      return null;
     }
 
     setIsGenerating(true);
@@ -646,14 +646,43 @@ const AppShell: React.FC = () => {
         throw new Error('Ajoute ta clé Gemini API dans Settings.');
       }
       const response: GenerationResponse = await generateAds(batch.brief);
+      if (batch.variants.length === 0) {
+        updateBatch(clientId, conceptId, batchId, {
+          strategy: response.strategy,
+          qa: response.qa,
+          variants: response.variants,
+        });
+        return null;
+      }
 
-      updateBatch(clientId, conceptId, batchId, {
-        strategy: response.strategy,
-        qa: response.qa,
-        variants: response.variants,
-      });
+      const nextIndex = concept.batches.length + 1;
+      const newBrief = createBriefFromResponse(batch.brief, response, nextIndex);
+
+      setWorkspace((prev) => ({
+        ...prev,
+        clients: prev.clients.map((item) =>
+          item.id === clientId
+            ? {
+                ...item,
+                updatedAt: Date.now(),
+                concepts: item.concepts.map((conceptItem) =>
+                  conceptItem.id === conceptId
+                    ? {
+                        ...conceptItem,
+                        updatedAt: Date.now(),
+                        batches: [newBrief, ...conceptItem.batches],
+                      }
+                    : conceptItem
+                ),
+              }
+            : item
+        ),
+        selection: { clientId, conceptId, batchId: newBrief.id },
+      }));
+      return newBrief;
     } catch (err: any) {
       setError(err?.message || 'Erreur lors de la génération.');
+      return null;
     } finally {
       setIsGenerating(false);
     }
@@ -979,7 +1008,12 @@ const AppShell: React.FC = () => {
         onGenerateAllVisuals={handleGenerateAllVisuals}
         onExportJson={exportJson}
         onUpdateBrief={(updates) => updateBatch(clientId, conceptId, batch.id, updates)}
-        onGenerateBrief={() => handleGenerateBrief(clientId, conceptId, batch.id)}
+        onGenerateBrief={async () => {
+          const newBrief = await handleGenerateBrief(clientId, conceptId, batch.id);
+          if (newBrief) {
+            navigate(`/client/${clientId}/concept/${conceptId}/brief/${newBrief.id}`);
+          }
+        }}
         onDuplicateBrief={() => {
           const newBrief = handleDuplicateBrief(clientId, conceptId, batch.id);
           if (newBrief) {
