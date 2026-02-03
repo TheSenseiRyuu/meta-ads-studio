@@ -97,6 +97,7 @@ export interface AdRun {
 export interface Batch {
   id: string;
   name: string;
+  brief: BrandBrief;
   createdAt: number;
   updatedAt: number;
   strategy: StrategyBoard | null;

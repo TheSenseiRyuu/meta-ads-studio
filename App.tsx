@@ -9,7 +9,6 @@ import {
   useParams,
 } from 'react-router-dom';
 import IntroScreen from './components/IntroScreen';
-import { SettingsPanel } from './components/SettingsPanel';
 import { AdModal } from './components/AdModal';
 import { Button } from './components/Button';
 import ClientsPage from './pages/ClientsPage';
@@ -35,7 +34,6 @@ import {
   Batch,
 } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Settings } from 'lucide-react';
 import { createId } from './utils/id';
 
 const defaultBrief: BrandBrief = {
@@ -108,14 +106,15 @@ const createConcept = (name: string, brief?: BrandBrief): Concept => ({
   batches: [],
 });
 
-const createBatch = (payload: GenerationResponse, index: number): Batch => ({
+const createBriefDraft = (brief: BrandBrief, index: number): Batch => ({
   id: createId(),
-  name: `Batch ${String(index).padStart(2, '0')} · ${new Date().toLocaleDateString()}`,
+  name: `Brief ${String(index).padStart(2, '0')} · ${new Date().toLocaleDateString()}`,
+  brief: normalizeBrief(brief),
   createdAt: Date.now(),
   updatedAt: Date.now(),
-  strategy: payload.strategy,
-  qa: payload.qa,
-  variants: payload.variants,
+  strategy: null,
+  qa: null,
+  variants: [],
 });
 
 const buildInitialWorkspace = (): Workspace => {
@@ -137,7 +136,8 @@ const buildInitialWorkspace = (): Workspace => {
     const concept = createConcept('Concept importé', normalizeBrief(legacyBrief || undefined));
     concept.batches = legacyRuns.map((run, index) => ({
       id: run.id || createId(),
-      name: `Batch ${String(index + 1).padStart(2, '0')} · ${new Date(run.createdAt).toLocaleDateString()}`,
+      name: `Brief ${String(index + 1).padStart(2, '0')} · ${new Date(run.createdAt).toLocaleDateString()}`,
+      brief: normalizeBrief(legacyBrief || undefined),
       createdAt: run.createdAt || Date.now(),
       updatedAt: run.createdAt || Date.now(),
       strategy: run.strategy,
@@ -177,7 +177,6 @@ const AppShell: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettingsState] = useLocalStorage<GeminiSettings>('meta-ads-settings', defaultSettings);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [models, setModels] = useState<ModelsResponse | null>(null);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [loadingStep, setLoadingStep] = useState(1);
@@ -186,6 +185,24 @@ const AppShell: React.FC = () => {
   const [visualBatchLoading, setVisualBatchLoading] = useState(false);
 
   const location = useLocation();
+
+  useEffect(() => {
+    setWorkspace((prev) => {
+      let changed = false;
+      const clients = prev.clients.map((client) => {
+        const concepts = client.concepts.map((concept) => {
+          const batches = concept.batches.map((batch) => {
+            if (batch.brief) return batch;
+            changed = true;
+            return { ...batch, brief: normalizeBrief(concept.brief) };
+          });
+          return changed ? { ...concept, batches } : concept;
+        });
+        return changed ? { ...client, concepts } : client;
+      });
+      return changed ? { ...prev, clients } : prev;
+    });
+  }, [setWorkspace]);
 
   useEffect(() => {
     setSelectedVariant(null);
@@ -219,11 +236,12 @@ const AppShell: React.FC = () => {
     return activeConcept.batches[0] || null;
   }, [activeConcept, selection.batchId]);
 
-  const selectedConceptForModal = useMemo(() => {
+  const selectedBatchForModal = useMemo(() => {
     if (!selectedContext) return null;
     const client = workspace.clients.find((item) => item.id === selectedContext.clientId);
     const concept = client?.concepts.find((item) => item.id === selectedContext.conceptId);
-    return concept || null;
+    const batch = concept?.batches.find((item) => item.id === selectedContext.batchId);
+    return batch || null;
   }, [selectedContext, workspace.clients]);
 
   useEffect(() => {
@@ -352,6 +370,25 @@ const AppShell: React.FC = () => {
     return newClient;
   };
 
+  const handleDeleteClient = (clientId: string) => {
+    setWorkspace((prev) => {
+      const clients = prev.clients.filter((client) => client.id !== clientId);
+      if (prev.selection?.clientId !== clientId) {
+        return { ...prev, clients };
+      }
+      const nextClient = clients[0];
+      const nextConcept = nextClient?.concepts[0];
+      const nextBatch = nextConcept?.batches[0];
+      return {
+        ...prev,
+        clients,
+        selection: nextClient
+          ? { clientId: nextClient.id, conceptId: nextConcept?.id, batchId: nextBatch?.id }
+          : {},
+      };
+    });
+  };
+
   const handleSelectClient = (clientId: string) => {
     const client = workspace.clients.find((item) => item.id === clientId);
     if (!client) return;
@@ -385,6 +422,32 @@ const AppShell: React.FC = () => {
     return newConcept;
   };
 
+  const handleDeleteConcept = (clientId: string, conceptId: string) => {
+    setWorkspace((prev) => {
+      const clients = prev.clients.map((client) => {
+        if (client.id !== clientId) return client;
+        return {
+          ...client,
+          updatedAt: Date.now(),
+          concepts: client.concepts.filter((concept) => concept.id !== conceptId),
+        };
+      });
+      if (prev.selection?.conceptId !== conceptId) {
+        return { ...prev, clients };
+      }
+      const client = clients.find((item) => item.id === clientId);
+      const nextConcept = client?.concepts[0];
+      const nextBatch = nextConcept?.batches[0];
+      return {
+        ...prev,
+        clients,
+        selection: nextConcept
+          ? { clientId, conceptId: nextConcept.id, batchId: nextBatch?.id }
+          : { clientId, conceptId: undefined, batchId: undefined },
+      };
+    });
+  };
+
   const handleSelectConcept = (clientId: string, conceptId: string) => {
     const client = workspace.clients.find((item) => item.id === clientId);
     const concept = client?.concepts.find((item) => item.id === conceptId);
@@ -403,6 +466,36 @@ const AppShell: React.FC = () => {
     });
   };
 
+  const handleCreateBrief = (clientId: string, conceptId: string) => {
+    const client = workspace.clients.find((item) => item.id === clientId);
+    const concept = client?.concepts.find((item) => item.id === conceptId);
+    if (!client || !concept) return null;
+    const nextIndex = concept.batches.length + 1;
+    const newBrief = createBriefDraft(concept.brief, nextIndex);
+    setWorkspace((prev) => ({
+      ...prev,
+      clients: prev.clients.map((item) =>
+        item.id === clientId
+          ? {
+              ...item,
+              updatedAt: Date.now(),
+              concepts: item.concepts.map((conceptItem) =>
+                conceptItem.id === conceptId
+                  ? {
+                      ...conceptItem,
+                      updatedAt: Date.now(),
+                      batches: [newBrief, ...conceptItem.batches],
+                    }
+                  : conceptItem
+              ),
+            }
+          : item
+      ),
+      selection: { clientId, conceptId, batchId: newBrief.id },
+    }));
+    return newBrief;
+  };
+
   const handleSelectBatch = (clientId: string, conceptId: string, batchId: string) => {
     setWorkspace((prev) => {
       if (
@@ -416,11 +509,12 @@ const AppShell: React.FC = () => {
     });
   };
 
-  const handleGenerate = async (clientId: string, conceptId: string) => {
+  const handleGenerateBrief = async (clientId: string, conceptId: string, batchId: string) => {
     const client = workspace.clients.find((item) => item.id === clientId);
     const concept = client?.concepts.find((item) => item.id === conceptId);
-    if (!client || !concept) {
-      setError('Sélectionne un concept pour lancer la génération.');
+    const batch = concept?.batches.find((item) => item.id === batchId);
+    if (!client || !concept || !batch) {
+      setError('Sélectionne un brief pour lancer la génération.');
       return;
     }
 
@@ -430,32 +524,13 @@ const AppShell: React.FC = () => {
       if (!settings.apiKey) {
         throw new Error('Ajoute ta clé Gemini API dans Settings.');
       }
-      const response: GenerationResponse = await generateAds(concept.brief);
+      const response: GenerationResponse = await generateAds(batch.brief);
 
-      const nextIndex = concept.batches.length + 1;
-      const newBatch = createBatch(response, nextIndex);
-
-      setWorkspace((prev) => ({
-        ...prev,
-        clients: prev.clients.map((item) =>
-          item.id === clientId
-            ? {
-                ...item,
-                updatedAt: Date.now(),
-                concepts: item.concepts.map((conceptItem) =>
-                  conceptItem.id === conceptId
-                    ? {
-                        ...conceptItem,
-                        updatedAt: Date.now(),
-                        batches: [newBatch, ...conceptItem.batches],
-                      }
-                    : conceptItem
-                ),
-              }
-            : item
-        ),
-        selection: { clientId, conceptId, batchId: newBatch.id },
-      }));
+      updateBatch(clientId, conceptId, batchId, {
+        strategy: response.strategy,
+        qa: response.qa,
+        variants: response.variants,
+      });
     } catch (err: any) {
       setError(err?.message || 'Erreur lors de la génération.');
     } finally {
@@ -481,7 +556,8 @@ const AppShell: React.FC = () => {
   ) => {
     const client = workspace.clients.find((item) => item.id === context.clientId);
     const concept = client?.concepts.find((item) => item.id === context.conceptId);
-    if (!concept) return;
+    const batch = concept?.batches.find((item) => item.id === context.batchId);
+    if (!concept || !batch) return;
 
     setVisualLoadingId(variant.id);
     setError(null);
@@ -491,10 +567,10 @@ const AppShell: React.FC = () => {
       }
       const result = await generateVisual({
         variant,
-        brandName: concept.brief.brandName,
-        productName: concept.brief.productName,
-        language: concept.brief.language,
-        aspectRatio: concept.brief.aspectRatio,
+        brandName: batch.brief.brandName,
+        productName: batch.brief.productName,
+        language: batch.brief.language,
+        aspectRatio: batch.brief.aspectRatio,
       });
 
       updateBatchVariants(context.clientId, context.conceptId, context.batchId, (variants) =>
@@ -542,10 +618,10 @@ const AppShell: React.FC = () => {
       try {
         const result = await generateVisual({
           variant,
-          brandName: concept.brief.brandName,
-          productName: concept.brief.productName,
-          language: concept.brief.language,
-          aspectRatio: concept.brief.aspectRatio,
+          brandName: batch.brief.brandName,
+          productName: batch.brief.productName,
+          language: batch.brief.language,
+          aspectRatio: batch.brief.aspectRatio,
         });
         updateBatchVariants(context.clientId, context.conceptId, context.batchId, (variants) =>
           variants.map((item) =>
@@ -601,12 +677,13 @@ const AppShell: React.FC = () => {
       concept: {
         id: concept.id,
         name: concept.name,
-        brief: concept.brief,
+        briefTemplate: concept.brief,
       },
-      batch: {
+      brief: {
         id: batch.id,
         name: batch.name,
         createdAt: batch.createdAt,
+        brief: batch.brief,
         strategy: batch.strategy,
         qa: batch.qa,
         variants: batch.variants,
@@ -633,7 +710,7 @@ const AppShell: React.FC = () => {
   };
 
   const routeType = useMemo(() => {
-    if (location.pathname.includes('/batch/')) return 'batch';
+    if (location.pathname.includes('/brief/')) return 'brief';
     if (location.pathname.includes('/concept/')) return 'concept';
     if (location.pathname.includes('/client/')) return 'client';
     return 'clients';
@@ -642,12 +719,12 @@ const AppShell: React.FC = () => {
   const headerTitle = useMemo(() => {
     if (routeType === 'client') return `Client: ${activeClient?.name || 'Client'}`;
     if (routeType === 'concept') return `Concept: ${activeConcept?.name || 'Concept'}`;
-    if (routeType === 'batch') return `Batch: ${activeBatch?.name || 'Batch'}`;
+    if (routeType === 'brief') return `Brief: ${activeBatch?.name || 'Brief'}`;
     return 'Clients';
   }, [routeType, activeClient?.name, activeConcept?.name, activeBatch?.name]);
 
   const backPath = useMemo(() => {
-    if (routeType === 'batch' && activeClient && activeConcept) {
+    if (routeType === 'brief' && activeClient && activeConcept) {
       return `/client/${activeClient.id}/concept/${activeConcept.id}`;
     }
     if (routeType === 'concept' && activeClient) {
@@ -707,6 +784,7 @@ const AppShell: React.FC = () => {
         onUpdateClient={updateClient}
         onCreateConcept={handleCreateConcept}
         onSelectConcept={handleSelectConcept}
+        onDeleteClient={handleDeleteClient}
       />
     );
   };
@@ -729,25 +807,26 @@ const AppShell: React.FC = () => {
         client={client}
         concept={concept}
         onUpdateConcept={updateConcept}
-        onSelectBatch={handleSelectBatch}
-        onGenerate={handleGenerate}
+        onSelectBrief={handleSelectBatch}
+        onCreateBrief={handleCreateBrief}
+        onDeleteConcept={handleDeleteConcept}
       />
     );
   };
 
-  const BatchRoute: React.FC = () => {
-    const { clientId, conceptId, batchId } = useParams();
+  const BriefRoute: React.FC = () => {
+    const { clientId, conceptId, briefId } = useParams();
     useEffect(() => {
-      if (clientId && conceptId && batchId) {
-        handleSelectBatch(clientId, conceptId, batchId);
+      if (clientId && conceptId && briefId) {
+        handleSelectBatch(clientId, conceptId, briefId);
       }
-    }, [clientId, conceptId, batchId]);
-    if (!clientId || !conceptId || !batchId) return <Navigate to="/" replace />;
+    }, [clientId, conceptId, briefId]);
+    if (!clientId || !conceptId || !briefId) return <Navigate to="/" replace />;
     const client = workspace.clients.find((item) => item.id === clientId);
     if (!client) return <Navigate to="/" replace />;
     const concept = client.concepts.find((item) => item.id === conceptId);
     if (!concept) return <Navigate to={`/client/${clientId}`} replace />;
-    const batch = concept.batches.find((item) => item.id === batchId);
+    const batch = concept.batches.find((item) => item.id === briefId);
     if (!batch) return <Navigate to={`/client/${clientId}/concept/${conceptId}`} replace />;
 
     return (
@@ -764,6 +843,8 @@ const AppShell: React.FC = () => {
         onToggleFavorite={toggleFavorite}
         onGenerateAllVisuals={handleGenerateAllVisuals}
         onExportJson={exportJson}
+        onUpdateBrief={(updates) => updateBatch(clientId, conceptId, batch.id, updates)}
+        onGenerateBrief={() => handleGenerateBrief(clientId, conceptId, batch.id)}
       />
     );
   };
@@ -791,7 +872,10 @@ const AppShell: React.FC = () => {
 
         <header className="relative z-10 px-6 md:px-12 py-6 flex items-center justify-between max-w-[1600px] mx-auto">
           {routeType === 'clients' ? (
-            <div className="flex-1"></div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
+              <h1 className="text-2xl md:text-3xl font-display">Tableau de bord</h1>
+            </div>
           ) : (
             <div className="flex items-center gap-3">
               {backPath && (
@@ -808,21 +892,6 @@ const AppShell: React.FC = () => {
               </div>
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<Settings className="w-4 h-4" />}
-              onClick={() => {
-                setShowSettings(true);
-                if (!models && settings.apiKey) {
-                  handleRefreshModels();
-                }
-              }}
-            >
-              <span className="sr-only">Settings</span>
-            </Button>
-          </div>
         </header>
 
         {error && (
@@ -842,12 +911,21 @@ const AppShell: React.FC = () => {
                   clients={workspace.clients}
                   onCreateClient={handleCreateClient}
                   onSelectClient={handleSelectClient}
+                  settings={settings}
+                  onChangeSettings={setSettingsState}
+                  onSaveSettings={handleSaveSettings}
+                  isSavingSettings={isSavingSettings}
+                  models={models?.models || []}
+                  textModels={models?.textModels || []}
+                  imageModels={models?.imageModels || []}
+                  isLoadingModels={isLoadingModels}
+                  onRefreshModels={handleRefreshModels}
                 />
               }
             />
             <Route path="/client/:clientId" element={<ClientRoute />} />
             <Route path="/client/:clientId/concept/:conceptId" element={<ConceptRoute />} />
-            <Route path="/client/:clientId/concept/:conceptId/batch/:batchId" element={<BatchRoute />} />
+            <Route path="/client/:clientId/concept/:conceptId/brief/:briefId" element={<BriefRoute />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -863,37 +941,8 @@ const AppShell: React.FC = () => {
         onGenerateVisual={(variant) => selectedContext && handleGenerateVisual(selectedContext, variant)}
         isGeneratingVisual={visualLoadingId === selectedVariant?.id}
         onDownloadVisual={downloadVisual}
-        aspectRatio={selectedConceptForModal?.brief.aspectRatio || 'Auto'}
+        aspectRatio={selectedBatchForModal?.brief.aspectRatio || 'Auto'}
       />
-
-      {showSettings && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-950/95 shadow-2xl">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-800">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Settings</p>
-                <h3 className="text-lg font-display text-white">Configuration Gemini API</h3>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowSettings(false)}>
-                Fermer
-              </Button>
-            </div>
-            <div className="p-6">
-              <SettingsPanel
-                settings={settings}
-                onChange={setSettingsState}
-                onSave={handleSaveSettings}
-                isSaving={isSavingSettings}
-                models={models?.models || []}
-                textModels={models?.textModels || []}
-                imageModels={models?.imageModels || []}
-                isLoadingModels={isLoadingModels}
-                onRefreshModels={handleRefreshModels}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

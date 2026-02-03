@@ -69,7 +69,7 @@ export const ConceptList: React.FC<ConceptListProps> = ({
                     </p>
                   </div>
                   <div className="text-xs text-zinc-400 flex items-center gap-2">
-                    {concept.batches.length} batches
+                    {concept.batches.length} briefs
                     <span className="flex items-center gap-1 text-cyan-300">
                       Ouvrir <ArrowRight className="w-3 h-3" />
                     </span>

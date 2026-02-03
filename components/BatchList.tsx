@@ -13,15 +13,15 @@ export const BatchList: React.FC<BatchListProps> = ({ batches, selectedId, onSel
     <section className="w-full">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-200">Batches</p>
-          <h3 className="text-xl font-display text-white">Productions</h3>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-200">Briefs</p>
+          <h3 className="text-xl font-display text-white">Historique des briefs</h3>
         </div>
         <History className="w-5 h-5 text-emerald-300" />
       </div>
 
       {batches.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-800/70 bg-zinc-950/40 p-6 text-zinc-500 text-sm">
-          Aucun batch. Lance une génération pour créer le premier.
+          Aucun brief. Crée le premier pour commencer.
         </div>
       ) : (
         <div className="border-y border-zinc-800/80 divide-y divide-zinc-800/80">

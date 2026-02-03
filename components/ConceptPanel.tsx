@@ -28,7 +28,7 @@ export const ConceptPanel: React.FC<ConceptPanelProps> = ({ concept, onUpdate })
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="rounded-full border border-zinc-800 bg-zinc-950/50 px-3 py-1 text-zinc-200">
-            {concept.batches.length} batches
+            {concept.batches.length} briefs
           </span>
           <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-100">
             Ratio: {concept.brief.aspectRatio}
