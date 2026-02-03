@@ -1,6 +1,6 @@
 # Meta Ads Studio
 
-Webapp full-stack qui génère des Ads Meta (copy + direction créative + prompts visuels) en s’appuyant sur **Gemini CLI** côté serveur.
+Webapp full-stack qui génère des Ads Meta (copy + direction créative + prompts visuels) en s’appuyant sur **Gemini API** côté serveur.
 
 ## Fonctionnalités
 - Brief complet marque/produit/audience.
@@ -12,7 +12,6 @@ Webapp full-stack qui génère des Ads Meta (copy + direction créative + prompt
 - Historique local.
 
 ## Prérequis
-- Gemini CLI installé et authentifié.
 - `GEMINI_API_KEY` configurée.
 
 ## Setup
@@ -26,8 +25,14 @@ npm run dev
 L’app démarre sur `http://localhost:5173` et l’API sur `http://localhost:8787`.
 
 ## Notes
-- L’API utilise Gemini CLI en mode headless JSON.
-- Aucun appel direct à l’API Gemini depuis le front-end.
+- L’API utilise Google Gemini API (`@google/genai`) côté serveur.
+- Génération d’images avec `gemini-3-pro-image-preview`.
+
+## Variables d’environnement
+- `GEMINI_API_KEY`
+- `GEMINI_TEXT_MODEL` (ex: `gemini-2.5-flash`)
+- `GEMINI_IMAGE_MODEL` (ex: `gemini-3-pro-image-preview`)
+- `GEMINI_IMAGE_SIZE` (`2K` ou `4K`)
 
 ## Tests
 ```bash

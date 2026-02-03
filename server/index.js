@@ -1,33 +1,20 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import { GoogleGenAI, Modality } from '@google/genai';
 import { buildPrompt } from './promptBuilder.js';
-import { buildVisualPrompt, PLACEMENTS } from './visualSpec.js';
+import { buildVisualPrompt, getImageAspectRatio, PLACEMENTS } from './visualSpec.js';
 
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
-const execFileAsync = promisify(execFile);
 const app = express();
 const PORT = process.env.PORT || 8787;
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-const extractResponse = (payload) => {
-  if (!payload) return '';
-  if (typeof payload === 'string') return payload;
-  if (payload.response) return payload.response;
-  if (payload.output) return payload.output;
-  if (payload.text) return payload.text;
-  if (payload.candidates?.[0]?.content?.parts) {
-    const textPart = payload.candidates[0].content.parts.find((part) => part.text);
-    return textPart?.text || '';
-  }
-  return '';
-};
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const parseJsonSafe = (text) => {
   try {
@@ -85,55 +72,29 @@ const normalizeVariants = (data, brief) => {
   };
 };
 
-const runGemini = async ({ prompt, model, responseType = 'json' }) => {
-  const args = ['--prompt', prompt, '--output-format', 'json'];
-  if (model) {
-    args.push('--model', model);
-  }
-
-  const { stdout } = await execFileAsync('gemini', args, {
-    env: process.env,
-    maxBuffer: 1024 * 1024 * 10,
-  });
-
-  const parsed = parseJsonSafe(stdout);
-  if (!parsed) {
-    throw new Error('Gemini CLI returned non-JSON output.');
-  }
-
-  const responseText = extractResponse(parsed);
-  if (!responseText) {
-    throw new Error('Gemini CLI returned empty response.');
-  }
-
-  if (responseType === 'text') {
-    return responseText;
-  }
-
-  const responseJson = parseJsonSafe(responseText);
-  if (!responseJson) {
-    throw new Error('Gemini response is not valid JSON.');
-  }
-
-  return responseJson;
+const getTextFromResponse = (response) => {
+  if (!response) return '';
+  if (response.text) return response.text;
+  const parts = response.candidates?.[0]?.content?.parts || [];
+  const textPart = parts.find((part) => part.text);
+  return textPart?.text || '';
 };
 
 app.get('/api/health', async (_req, res) => {
   try {
-    const { stdout } = await execFileAsync('gemini', ['--version'], { env: process.env });
     const apiKeyPresent = Boolean(process.env.GEMINI_API_KEY);
     res.json({
-      cliAvailable: true,
-      cliVersion: stdout.trim(),
+      cliAvailable: apiKeyPresent,
+      cliVersion: apiKeyPresent ? 'API' : null,
       apiKeyPresent,
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      model: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
     });
   } catch (error) {
     res.json({
       cliAvailable: false,
       apiKeyPresent: Boolean(process.env.GEMINI_API_KEY),
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      message: error?.message || 'Gemini CLI not available.',
+      model: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
+      message: error?.message || 'Gemini API not available.',
     });
   }
 });
@@ -146,24 +107,28 @@ app.post('/api/generate', async (req, res) => {
     }
 
     const prompt = buildPrompt(brief);
-    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const responseJson = await runGemini({ prompt, model, responseType: 'json' });
+    const model = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
+    const response = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+
+    const text = getTextFromResponse(response);
+    const responseJson = parseJsonSafe(text);
+    if (!responseJson) {
+      throw new Error('Réponse Gemini invalide (JSON attendu).');
+    }
+
     const normalized = normalizeVariants(responseJson, brief);
 
     return res.json(normalized);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: error?.message || 'Erreur Gemini CLI.',
+      message: error?.message || 'Erreur Gemini API.',
     });
   }
 });
-
-const extractSvg = (text) => {
-  if (!text) return null;
-  const match = text.match(/<svg[\s\S]*?<\/svg>/i);
-  return match ? match[0] : null;
-};
 
 app.post('/api/generate-visual', async (req, res) => {
   try {
@@ -183,19 +148,36 @@ app.post('/api/generate-visual', async (req, res) => {
       placement,
     });
 
-    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const responseText = await runGemini({ prompt, model, responseType: 'text' });
-    const svg = extractSvg(responseText);
+    const model = process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image-preview';
+    const imageSize = process.env.GEMINI_IMAGE_SIZE || '2K';
+    const aspect = getImageAspectRatio({ placement, aspectRatio: normalizedRatio });
 
-    if (!svg) {
-      throw new Error('Impossible de générer un SVG valide.');
+    const response = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        responseModalities: [Modality.IMAGE],
+        imageConfig: {
+          imageSize,
+          aspectRatio: aspect,
+        },
+      },
+    });
+
+    const parts = response.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((part) => part.inlineData);
+    if (!imagePart?.inlineData?.data) {
+      throw new Error('Aucune image retournée par Gemini.');
     }
 
-    return res.json({ svg });
+    return res.json({
+      imageBase64: imagePart.inlineData.data,
+      mimeType: imagePart.inlineData.mimeType || 'image/png',
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: error?.message || 'Erreur génération visuel.',
+      message: error?.message || 'Erreur génération image.',
     });
   }
 });

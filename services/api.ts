@@ -37,7 +37,7 @@ export const generateVisual = async (payload: {
   productName: string;
   language: string;
   aspectRatio: string;
-}): Promise<{ svg: string }> => {
+}): Promise<{ imageBase64: string; mimeType: string }> => {
   const res = await fetch('/api/generate-visual', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -1,5 +1,5 @@
 {
   "name": "Meta Ads Studio",
-  "description": "Full-stack webapp that generates Meta Ads campaigns and creative variants via Gemini CLI.",
+  "description": "Full-stack webapp that generates Meta Ads campaigns and creative variants via Gemini API.",
   "requestFramePermissions": []
 }

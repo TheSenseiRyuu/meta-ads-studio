@@ -45,7 +45,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
           </div>
           <div className="flex items-center gap-2 text-emerald-300 text-xs">
             <Sparkles className="w-4 h-4" />
-            <span>Gemini CLI</span>
+            <span>Gemini API</span>
           </div>
         </div>
 

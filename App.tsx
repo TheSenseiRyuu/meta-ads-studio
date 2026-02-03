@@ -65,7 +65,7 @@ const App: React.FC = () => {
           cliAvailable: false,
           apiKeyPresent: false,
           model: 'gemini-2.5-flash',
-          message: 'Gemini CLI not reachable.',
+          message: 'Gemini API not reachable.',
         })
       );
   }, []);
@@ -140,10 +140,22 @@ const App: React.FC = () => {
         aspectRatio: brief.aspectRatio,
       });
       setVariants((prev) =>
-        prev.map((item) => (item.id === variant.id ? { ...item, visualSvg: result.svg } : item))
+        prev.map((item) =>
+          item.id === variant.id
+            ? {
+                ...item,
+                visualImage: `data:${result.mimeType};base64,${result.imageBase64}`,
+                visualMimeType: result.mimeType,
+              }
+            : item
+        )
       );
       if (selectedVariant?.id === variant.id) {
-        setSelectedVariant({ ...variant, visualSvg: result.svg });
+        setSelectedVariant({
+          ...variant,
+          visualImage: `data:${result.mimeType};base64,${result.imageBase64}`,
+          visualMimeType: result.mimeType,
+        });
       }
     } catch (err: any) {
       setError(err?.message || 'Erreur génération visuel.');
@@ -167,7 +179,15 @@ const App: React.FC = () => {
           aspectRatio: brief.aspectRatio,
         });
         setVariants((prev) =>
-          prev.map((item) => (item.id === variant.id ? { ...item, visualSvg: result.svg } : item))
+          prev.map((item) =>
+            item.id === variant.id
+              ? {
+                  ...item,
+                  visualImage: `data:${result.mimeType};base64,${result.imageBase64}`,
+                  visualMimeType: result.mimeType,
+                }
+              : item
+          )
         );
       } catch (err: any) {
         setError(err?.message || 'Erreur génération visuel.');
@@ -178,12 +198,19 @@ const App: React.FC = () => {
   };
 
   const downloadVisual = (variant: AdVariant) => {
-    if (!variant.visualSvg) return;
-    const blob = new Blob([variant.visualSvg], { type: 'image/svg+xml' });
+    if (!variant.visualImage || !variant.visualMimeType) return;
+    const base64 = variant.visualImage.split(',')[1];
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i += 1) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: variant.visualMimeType });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `${variant.name.toLowerCase().replace(/\s+/g, '-')}.svg`;
+    const ext = variant.visualMimeType.includes('png') ? 'png' : 'jpg';
+    anchor.download = `${variant.name.toLowerCase().replace(/\s+/g, '-')}.${ext}`;
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -209,10 +236,10 @@ const App: React.FC = () => {
   };
 
   const metaStatus = useMemo(() => {
-    if (!health) return 'Checking Gemini CLI...';
-    if (!health.cliAvailable) return 'Gemini CLI indisponible';
+    if (!health) return 'Checking Gemini API...';
+    if (!health.cliAvailable) return 'Gemini API indisponible';
     if (!health.apiKeyPresent) return 'Clé API manquante';
-    return `Gemini CLI ${health.cliVersion || ''}`.trim();
+    return `Gemini API ${health.cliVersion || ''}`.trim();
   }, [health]);
 
   return (
@@ -228,7 +255,7 @@ const App: React.FC = () => {
         <header className="relative z-10 px-6 md:px-12 py-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between max-w-[1400px] mx-auto">
           <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
-            <h1 className="text-3xl md:text-4xl font-display">Production d’Ads premium via Gemini CLI</h1>
+            <h1 className="text-3xl md:text-4xl font-display">Production d’Ads premium via Gemini API</h1>
             <p className="text-sm text-zinc-400 mt-2">
               Unifie les flows des 3 projets pour livrer des créations Meta Ads haut de gamme, prêtes à scaler.
             </p>

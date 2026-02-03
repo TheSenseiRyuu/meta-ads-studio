@@ -127,7 +127,7 @@ export const AdModal: React.FC<AdModalProps> = ({
                       size="sm"
                       icon={<Download className="w-4 h-4" />}
                       onClick={() => onDownloadVisual(variant)}
-                      disabled={!variant.visualSvg}
+                      disabled={!variant.visualImage}
                     >
                       Télécharger
                     </Button>
@@ -136,12 +136,12 @@ export const AdModal: React.FC<AdModalProps> = ({
                 <p className="text-[11px] text-zinc-500 mb-3">
                   Safe zone: haut {safeZone.top}% · bas {safeZone.bottom}% · côtés {safeZone.side}%.
                 </p>
-                {variant.visualSvg ? (
+                {variant.visualImage ? (
                   <div className="relative rounded-xl overflow-hidden border border-zinc-800 bg-white">
                     <img
                       alt={`Visuel ${variant.name}`}
                       className="w-full h-auto"
-                      src={`data:image/svg+xml;utf8,${encodeURIComponent(variant.visualSvg)}`}
+                      src={variant.visualImage}
                     />
                     <div className="pointer-events-none absolute inset-0">
                       <div

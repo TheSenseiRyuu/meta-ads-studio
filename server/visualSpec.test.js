@@ -32,6 +32,6 @@ test('buildVisualPrompt includes size and safe zone specs', () => {
     aspectRatio: '4:5',
     placement: 'Feed',
   });
-  assert.match(prompt, /Taille: 1080x1350/);
+  assert.match(prompt, /Taille cible: 1080x1350/);
   assert.match(prompt, /SAFE ZONE/);
 });

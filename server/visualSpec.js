@@ -13,6 +13,7 @@ const ratioDimensions = {
   '4:5': { width: 1080, height: 1350 },
   '9:16': { width: 1080, height: 1920 },
   '1.91:1': { width: 1200, height: 628 },
+  '16:9': { width: 1280, height: 720 },
 };
 
 export const getDimensions = ({ placement, aspectRatio }) => {
@@ -20,6 +21,17 @@ export const getDimensions = ({ placement, aspectRatio }) => {
     return ratioDimensions[aspectRatio];
   }
   return placementDimensions[placement] || placementDimensions.Feed;
+};
+
+export const getImageAspectRatio = ({ placement, aspectRatio }) => {
+  if (aspectRatio && aspectRatio !== 'Auto') {
+    if (aspectRatio === '1.91:1') return '16:9';
+    return aspectRatio;
+  }
+  if (placement === 'Stories' || placement === 'Reels') return '9:16';
+  if (placement === 'Explore') return '1:1';
+  if (placement === 'Messenger') return '16:9';
+  return '4:5';
 };
 
 export const getSafeZone = ({ placement, aspectRatio }) => {
@@ -51,8 +63,8 @@ export const buildVisualPrompt = ({
 
   return `
 Tu es un designer senior spécialisé Meta Ads.
-Crée un VISUEL publicitaire sous forme de SVG.
-Le SVG doit être complet, autonome, et sans ressources externes.
+Crée un VISUEL publicitaire haute résolution (image).
+Le rendu doit être propre, premium, et prêt pour diffusion.
 
 MARQUE: ${brandName || ''}
 PRODUIT: ${productName || ''}
@@ -73,13 +85,12 @@ CONCEPT: ${variant.visualConcept}
 PROMPT IMAGE: ${variant.imagePrompt}
 
 SPÉCIFICATIONS DESIGN:
-- Taille: ${size.width}x${size.height}. Ajouter viewBox="0 0 ${size.width} ${size.height}".
+- Taille cible: ${size.width}x${size.height}.
 - Style premium: hiérarchie typographique claire, 2-3 couleurs max, contraste élevé.
 - Inclure: fond travaillé + zone produit (placeholder élégant) + bloc texte lisible + bouton CTA.
 - SAFE ZONE: laisser vides ${safeZone.top}% en haut, ${safeZone.bottom}% en bas, ${safeZone.side}% sur les côtés (pas de textes/logos critiques).
-- Utiliser des formes vectorielles simples, gradients doux, légère profondeur (ombre subtile, halo).
-- Typo: font-family "Manrope, Space Grotesk, sans-serif", tailles nettes.
-- Aucun lien/asset externe. Ne pas dessiner la safe zone, elle doit rester invisible.
-- Sortir UNIQUEMENT le SVG (commence par <svg> et finit par </svg>).
+- Lumière studio, ombres douces, profondeur subtile.
+- Composition publicitaire nette, pas de texte illisible.
+- Sortir une image publicitaire de haute qualité.
 `;
 };
