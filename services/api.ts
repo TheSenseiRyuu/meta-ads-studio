@@ -5,6 +5,8 @@ export interface HealthStatus {
   cliVersion?: string;
   apiKeyPresent: boolean;
   model: string;
+  imageModel?: string;
+  imageSize?: string;
   message?: string;
 }
 
@@ -13,6 +15,26 @@ export const getHealth = async (): Promise<HealthStatus> => {
   if (!res.ok) {
     throw new Error('Health check failed');
   }
+  return res.json();
+};
+
+export const setSettings = async (settings: {
+  apiKey: string;
+  textModel: string;
+  imageModel: string;
+  imageSize: string;
+}): Promise<{ ok: boolean }> => {
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.message || 'Settings update failed');
+  }
+
   return res.json();
 };
 

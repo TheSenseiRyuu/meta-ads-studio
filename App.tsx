@@ -4,11 +4,12 @@ import { AdGrid } from './components/AdGrid';
 import { AdModal } from './components/AdModal';
 import { InsightBoard } from './components/InsightBoard';
 import { HistoryPanel } from './components/HistoryPanel';
+import { SettingsPanel } from './components/SettingsPanel';
 import IntroScreen from './components/IntroScreen';
 import Loading from './components/Loading';
 import { Button } from './components/Button';
-import { generateAds, generateVisual, getHealth, HealthStatus } from './services/api';
-import { AdRun, AdVariant, BrandBrief, GenerationResponse, QualityAssurance, StrategyBoard } from './types';
+import { generateAds, generateVisual, getHealth, HealthStatus, setSettings } from './services/api';
+import { AdRun, AdVariant, BrandBrief, GenerationResponse, QualityAssurance, StrategyBoard, GeminiSettings } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Download, RefreshCw, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 import { createId } from './utils/id';
@@ -33,6 +34,13 @@ const defaultBrief: BrandBrief = {
   budget: '2 000€/mois',
 };
 
+const defaultSettings: GeminiSettings = {
+  apiKey: '',
+  textModel: 'gemini-2.5-flash',
+  imageModel: 'gemini-3-pro-image-preview',
+  imageSize: '2K',
+};
+
 const loadingHints = [
   'Scan des motivations d’achat et des signaux de désir.',
   'Calibration du ton selon la marque et la plateforme.',
@@ -52,6 +60,8 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [runs, setRuns] = useLocalStorage<AdRun[]>('meta-ads-history', []);
+  const [settings, setSettingsState] = useLocalStorage<GeminiSettings>('meta-ads-settings', defaultSettings);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [loadingStep, setLoadingStep] = useState(1);
   const [loadingStatus, setLoadingStatus] = useState('Brief scan');
   const [visualLoadingId, setVisualLoadingId] = useState<string | null>(null);
@@ -68,6 +78,14 @@ const App: React.FC = () => {
           message: 'Gemini API not reachable.',
         })
       );
+  }, []);
+
+  useEffect(() => {
+    if (!settings.apiKey) return;
+    setSettings(settings).catch(() => {
+      // Silent fail, user can retry
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -95,6 +113,9 @@ const App: React.FC = () => {
     setIsGenerating(true);
     setError(null);
     try {
+      if (!settings.apiKey) {
+        throw new Error('Ajoute ta clé Gemini API dans Settings.');
+      }
       const response: GenerationResponse = await generateAds(brief);
       setStrategy(response.strategy);
       setVariants(response.variants);
@@ -132,6 +153,9 @@ const App: React.FC = () => {
     setVisualLoadingId(variant.id);
     setError(null);
     try {
+      if (!settings.apiKey) {
+        throw new Error('Ajoute ta clé Gemini API dans Settings.');
+      }
       const result = await generateVisual({
         variant,
         brandName: brief.brandName,
@@ -168,8 +192,13 @@ const App: React.FC = () => {
     if (variants.length === 0) return;
     setVisualBatchLoading(true);
     setError(null);
+    if (!settings.apiKey) {
+      setError('Ajoute ta clé Gemini API dans Settings.');
+      setVisualBatchLoading(false);
+      return;
+    }
     for (const variant of variants) {
-      if (variant.visualSvg) continue;
+      if (variant.visualImage) continue;
       try {
         const result = await generateVisual({
           variant,
@@ -242,6 +271,20 @@ const App: React.FC = () => {
     return `Gemini API ${health.cliVersion || ''}`.trim();
   }, [health]);
 
+  const handleSaveSettings = async (nextSettings: GeminiSettings) => {
+    setIsSavingSettings(true);
+    setError(null);
+    try {
+      await setSettings(nextSettings);
+      const updatedHealth = await getHealth();
+      setHealth(updatedHealth);
+    } catch (err: any) {
+      setError(err?.message || 'Erreur mise à jour settings.');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       {showIntro && <IntroScreen onComplete={() => setShowIntro(false)} />}
@@ -289,6 +332,13 @@ const App: React.FC = () => {
         <main className="relative z-10 px-6 md:px-12 pb-16 grid grid-cols-1 xl:grid-cols-[1.2fr_1.8fr] gap-8 max-w-[1400px] mx-auto">
           <section className="space-y-6">
             <BriefForm brief={brief} onChange={setBrief} onGenerate={handleGenerate} isGenerating={isGenerating} />
+
+            <SettingsPanel
+              settings={settings}
+              onChange={setSettingsState}
+              onSave={handleSaveSettings}
+              isSaving={isSavingSettings}
+            />
 
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
               <div className="flex items-center justify-between mb-4">

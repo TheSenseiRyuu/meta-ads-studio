@@ -8,6 +8,19 @@ export type Objective =
 export type Placement = 'Feed' | 'Reels' | 'Stories' | 'Explore' | 'Messenger';
 export type AspectRatio = 'Auto' | '1:1' | '4:5' | '9:16' | '1.91:1';
 
+export interface GeminiSettings {
+  apiKey: string;
+  textModel: string;
+  imageModel: string;
+  imageSize: '2K' | '4K';
+}
+export interface GeminiSettings {
+  apiKey: string;
+  textModel: string;
+  imageModel: string;
+  imageSize: '2K' | '4K';
+}
+
 export type Tone =
   | 'Bold'
   | 'Playful'

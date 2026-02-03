@@ -34,6 +34,10 @@ L’app démarre sur `http://localhost:5173` et l’API sur `http://localhost:87
 - `GEMINI_IMAGE_MODEL` (ex: `gemini-3-pro-image-preview`)
 - `GEMINI_IMAGE_SIZE` (`2K` ou `4K`)
 
+## Settings UI
+- Onglet Settings dans l’app pour définir API key + modèles.
+- Stockage local (localStorage) pour éviter de ressaisir la clé à chaque refresh.
+
 ## Tests
 ```bash
 npm run test

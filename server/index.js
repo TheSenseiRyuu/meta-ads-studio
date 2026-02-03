@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 8787;
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAiClient = (apiKey) => new GoogleGenAI({ apiKey });
 
 const parseJsonSafe = (text) => {
   try {
@@ -88,12 +88,16 @@ app.get('/api/health', async (_req, res) => {
       cliVersion: apiKeyPresent ? 'API' : null,
       apiKeyPresent,
       model: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
+      imageModel: process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image-preview',
+      imageSize: process.env.GEMINI_IMAGE_SIZE || '2K',
     });
   } catch (error) {
     res.json({
       cliAvailable: false,
       apiKeyPresent: Boolean(process.env.GEMINI_API_KEY),
       model: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
+      imageModel: process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image-preview',
+      imageSize: process.env.GEMINI_IMAGE_SIZE || '2K',
       message: error?.message || 'Gemini API not available.',
     });
   }
@@ -108,6 +112,7 @@ app.post('/api/generate', async (req, res) => {
 
     const prompt = buildPrompt(brief);
     const model = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
+    const ai = getAiClient(process.env.GEMINI_API_KEY);
     const response = await ai.models.generateContent({
       model,
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -151,7 +156,7 @@ app.post('/api/generate-visual', async (req, res) => {
     const model = process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image-preview';
     const imageSize = process.env.GEMINI_IMAGE_SIZE || '2K';
     const aspect = getImageAspectRatio({ placement, aspectRatio: normalizedRatio });
-
+    const ai = getAiClient(process.env.GEMINI_API_KEY);
     const response = await ai.models.generateContent({
       model,
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -179,6 +184,23 @@ app.post('/api/generate-visual', async (req, res) => {
     return res.status(500).json({
       message: error?.message || 'Erreur génération image.',
     });
+  }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const { apiKey, textModel, imageModel, imageSize } = req.body || {};
+    if (!apiKey) {
+      return res.status(400).json({ message: 'API key manquante.' });
+    }
+    process.env.GEMINI_API_KEY = apiKey;
+    if (textModel) process.env.GEMINI_TEXT_MODEL = textModel;
+    if (imageModel) process.env.GEMINI_IMAGE_MODEL = imageModel;
+    if (imageSize) process.env.GEMINI_IMAGE_SIZE = imageSize;
+
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ message: error?.message || 'Settings error.' });
   }
 });
 
