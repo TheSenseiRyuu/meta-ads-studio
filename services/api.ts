@@ -1,4 +1,4 @@
-import { AdVariant, BrandBrief, GenerationResponse } from '../types';
+import { AdVariant, BrandBrief, GenerationResponse, GeminiModelOption } from '../types';
 
 export interface HealthStatus {
   cliAvailable: boolean;
@@ -10,11 +10,32 @@ export interface HealthStatus {
   message?: string;
 }
 
+export interface ModelsResponse {
+  models: GeminiModelOption[];
+  textModels: GeminiModelOption[];
+  imageModels: GeminiModelOption[];
+}
+
 export const getHealth = async (): Promise<HealthStatus> => {
   const res = await fetch('/api/health');
   if (!res.ok) {
     throw new Error('Health check failed');
   }
+  return res.json();
+};
+
+export const getModels = async (apiKey?: string): Promise<ModelsResponse> => {
+  const res = await fetch('/api/models', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.message || 'Models fetch failed');
+  }
+
   return res.json();
 };
 

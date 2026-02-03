@@ -1,31 +1,30 @@
 import React, { useState } from 'react';
-import { GeminiSettings } from '../types';
+import { GeminiSettings, GeminiModelOption } from '../types';
 import { Button } from './Button';
-import { Key, Settings2, Image as ImageIcon, Cpu } from 'lucide-react';
+import { Key, Settings2, Image as ImageIcon, Cpu, RefreshCcw } from 'lucide-react';
 
 interface SettingsPanelProps {
   settings: GeminiSettings;
   onChange: (settings: GeminiSettings) => void;
   onSave: (settings: GeminiSettings) => Promise<void>;
   isSaving: boolean;
+  models: GeminiModelOption[];
+  textModels: GeminiModelOption[];
+  imageModels: GeminiModelOption[];
+  isLoadingModels: boolean;
+  onRefreshModels: () => void;
 }
-
-const textModels = [
-  'gemini-2.5-flash',
-  'gemini-2.5-pro',
-  'gemini-2.0-flash',
-];
-
-const imageModels = [
-  'gemini-3-pro-image-preview',
-  'gemini-2.5-flash-image-preview',
-];
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   settings,
   onChange,
   onSave,
   isSaving,
+  models,
+  textModels,
+  imageModels,
+  isLoadingModels,
+  onRefreshModels,
 }) => {
   const [showKey, setShowKey] = useState(false);
 
@@ -68,6 +67,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <p className="mt-2 text-xs text-zinc-500">
             Stockée en local (localStorage). Jamais envoyée ailleurs que votre serveur local.
           </p>
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<RefreshCcw className="w-4 h-4" />}
+              onClick={onRefreshModels}
+              disabled={!settings.apiKey}
+              isLoading={isLoadingModels}
+            >
+              Charger les modèles
+            </Button>
+            <span className="text-[11px] text-zinc-500">
+              {models.length > 0
+                ? `${models.length} modèles`
+                : 'Sauvegarde la clé pour charger la liste.'}
+            </span>
+          </div>
         </label>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -80,9 +96,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 onChange={(e) => updateField('textModel', e.target.value)}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
               >
+                {textModels.length === 0 && (
+                  <option value={settings.textModel}>{settings.textModel}</option>
+                )}
                 {textModels.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
+                  <option key={model.id} value={model.id}>
+                    {model.displayName ? `${model.displayName} (${model.id})` : model.id}
                   </option>
                 ))}
               </select>
@@ -98,9 +117,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 onChange={(e) => updateField('imageModel', e.target.value)}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
               >
+                {imageModels.length === 0 && (
+                  <option value={settings.imageModel}>{settings.imageModel}</option>
+                )}
                 {imageModels.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
+                  <option key={model.id} value={model.id}>
+                    {model.displayName ? `${model.displayName} (${model.id})` : model.id}
                   </option>
                 ))}
               </select>

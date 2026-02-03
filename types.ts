@@ -14,6 +14,14 @@ export interface GeminiSettings {
   imageModel: string;
   imageSize: '2K' | '4K';
 }
+
+export interface GeminiModelOption {
+  id: string;
+  name: string;
+  displayName?: string;
+  supportedGenerationMethods?: string[];
+  isImage: boolean;
+}
 export interface GeminiSettings {
   apiKey: string;
   textModel: string;

@@ -103,6 +103,45 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
+app.post('/api/models', async (req, res) => {
+  try {
+    const apiKey = req.body?.apiKey || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ message: 'API key manquante.' });
+    }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (!response.ok) {
+      const text = await response.text();
+      return res.status(response.status).json({ message: text || 'Erreur Google API.' });
+    }
+
+    const data = await response.json();
+    const models = (data.models || [])
+      .filter((model) => model.supportedGenerationMethods?.includes('generateContent'))
+      .map((model) => {
+        const id = model.name?.replace('models/', '') || model.name;
+        const displayName = model.displayName || model.name;
+        const isImage = /image/i.test(id) || /image/i.test(displayName);
+        return {
+          id,
+          name: model.name,
+          displayName,
+          supportedGenerationMethods: model.supportedGenerationMethods,
+          isImage,
+        };
+      })
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    const textModels = models.filter((model) => !model.isImage);
+    const imageModels = models.filter((model) => model.isImage);
+
+    return res.json({ models, textModels, imageModels });
+  } catch (error) {
+    return res.status(500).json({ message: error?.message || 'Erreur récupération modèles.' });
+  }
+});
+
 app.post('/api/generate', async (req, res) => {
   try {
     const { brief } = req.body || {};

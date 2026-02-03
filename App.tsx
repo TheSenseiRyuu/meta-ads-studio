@@ -8,7 +8,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import IntroScreen from './components/IntroScreen';
 import Loading from './components/Loading';
 import { Button } from './components/Button';
-import { generateAds, generateVisual, getHealth, HealthStatus, setSettings } from './services/api';
+import { generateAds, generateVisual, getHealth, HealthStatus, setSettings, getModels } from './services/api';
 import { AdRun, AdVariant, BrandBrief, GenerationResponse, QualityAssurance, StrategyBoard, GeminiSettings } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Download, RefreshCw, ShieldCheck, Image as ImageIcon, Settings } from 'lucide-react';
@@ -63,6 +63,8 @@ const App: React.FC = () => {
   const [settings, setSettingsState] = useLocalStorage<GeminiSettings>('meta-ads-settings', defaultSettings);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [models, setModels] = useState<ModelsResponse | null>(null);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [loadingStep, setLoadingStep] = useState(1);
   const [loadingStatus, setLoadingStatus] = useState('Brief scan');
   const [visualLoadingId, setVisualLoadingId] = useState<string | null>(null);
@@ -280,10 +282,30 @@ const App: React.FC = () => {
       const updatedHealth = await getHealth();
       setHealth(updatedHealth);
       setShowSettings(false);
+      if (nextSettings.apiKey) {
+        setIsLoadingModels(true);
+        const modelsResponse = await getModels(nextSettings.apiKey);
+        setModels(modelsResponse);
+        setIsLoadingModels(false);
+      }
     } catch (err: any) {
       setError(err?.message || 'Erreur mise à jour settings.');
     } finally {
       setIsSavingSettings(false);
+    }
+  };
+
+  const handleRefreshModels = async () => {
+    if (!settings.apiKey) return;
+    setIsLoadingModels(true);
+    setError(null);
+    try {
+      const modelsResponse = await getModels(settings.apiKey);
+      setModels(modelsResponse);
+    } catch (err: any) {
+      setError(err?.message || 'Erreur chargement modèles.');
+    } finally {
+      setIsLoadingModels(false);
     }
   };
 
@@ -335,7 +357,12 @@ const App: React.FC = () => {
               variant="secondary"
               size="sm"
               icon={<Settings className="w-4 h-4" />}
-              onClick={() => setShowSettings(true)}
+              onClick={() => {
+                setShowSettings(true);
+                if (!models && settings.apiKey) {
+                  handleRefreshModels();
+                }
+              }}
             >
               Settings
             </Button>
@@ -444,6 +471,11 @@ const App: React.FC = () => {
                 onChange={setSettingsState}
                 onSave={handleSaveSettings}
                 isSaving={isSavingSettings}
+                models={models?.models || []}
+                textModels={models?.textModels || []}
+                imageModels={models?.imageModels || []}
+                isLoadingModels={isLoadingModels}
+                onRefreshModels={handleRefreshModels}
               />
             </div>
           </div>
