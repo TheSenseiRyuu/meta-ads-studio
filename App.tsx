@@ -672,12 +672,14 @@ const AppShell: React.FC = () => {
 
   const ClientRoute: React.FC = () => {
     const { clientId } = useParams();
+    useEffect(() => {
+      if (clientId) {
+        handleSelectClient(clientId);
+      }
+    }, [clientId]);
     if (!clientId) return <Navigate to="/" replace />;
     const client = workspace.clients.find((item) => item.id === clientId);
     if (!client) return <Navigate to="/" replace />;
-    useEffect(() => {
-      handleSelectClient(clientId);
-    }, [clientId]);
     return (
       <ClientPage
         client={client}
@@ -690,14 +692,16 @@ const AppShell: React.FC = () => {
 
   const ConceptRoute: React.FC = () => {
     const { clientId, conceptId } = useParams();
+    useEffect(() => {
+      if (clientId && conceptId) {
+        handleSelectConcept(clientId, conceptId);
+      }
+    }, [clientId, conceptId]);
     if (!clientId || !conceptId) return <Navigate to="/" replace />;
     const client = workspace.clients.find((item) => item.id === clientId);
     if (!client) return <Navigate to="/" replace />;
     const concept = client.concepts.find((item) => item.id === conceptId);
     if (!concept) return <Navigate to={`/client/${clientId}`} replace />;
-    useEffect(() => {
-      handleSelectConcept(clientId, conceptId);
-    }, [clientId, conceptId]);
 
     return (
       <ConceptPage
@@ -712,6 +716,11 @@ const AppShell: React.FC = () => {
 
   const BatchRoute: React.FC = () => {
     const { clientId, conceptId, batchId } = useParams();
+    useEffect(() => {
+      if (clientId && conceptId && batchId) {
+        handleSelectBatch(clientId, conceptId, batchId);
+      }
+    }, [clientId, conceptId, batchId]);
     if (!clientId || !conceptId || !batchId) return <Navigate to="/" replace />;
     const client = workspace.clients.find((item) => item.id === clientId);
     if (!client) return <Navigate to="/" replace />;
@@ -719,10 +728,6 @@ const AppShell: React.FC = () => {
     if (!concept) return <Navigate to={`/client/${clientId}`} replace />;
     const batch = concept.batches.find((item) => item.id === batchId);
     if (!batch) return <Navigate to={`/client/${clientId}/concept/${conceptId}`} replace />;
-
-    useEffect(() => {
-      handleSelectBatch(clientId, conceptId, batchId);
-    }, [clientId, conceptId, batchId]);
 
     return (
       <BatchPage
