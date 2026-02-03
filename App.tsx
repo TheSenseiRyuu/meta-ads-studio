@@ -357,10 +357,18 @@ const AppShell: React.FC = () => {
     if (!client) return;
     const concept = client.concepts[0];
     const batch = concept?.batches[0];
-    setWorkspace((prev) => ({
-      ...prev,
-      selection: { clientId, conceptId: concept?.id, batchId: batch?.id },
-    }));
+    const conceptId = concept?.id;
+    const batchId = batch?.id;
+    setWorkspace((prev) => {
+      if (
+        prev.selection?.clientId === clientId &&
+        prev.selection?.conceptId === conceptId &&
+        prev.selection?.batchId === batchId
+      ) {
+        return prev;
+      }
+      return { ...prev, selection: { clientId, conceptId, batchId } };
+    });
   };
 
   const handleCreateConcept = (clientId: string) => {
@@ -382,17 +390,30 @@ const AppShell: React.FC = () => {
     const concept = client?.concepts.find((item) => item.id === conceptId);
     if (!client || !concept) return;
     const batch = concept.batches[0];
-    setWorkspace((prev) => ({
-      ...prev,
-      selection: { clientId, conceptId, batchId: batch?.id },
-    }));
+    const batchId = batch?.id;
+    setWorkspace((prev) => {
+      if (
+        prev.selection?.clientId === clientId &&
+        prev.selection?.conceptId === conceptId &&
+        prev.selection?.batchId === batchId
+      ) {
+        return prev;
+      }
+      return { ...prev, selection: { clientId, conceptId, batchId } };
+    });
   };
 
   const handleSelectBatch = (clientId: string, conceptId: string, batchId: string) => {
-    setWorkspace((prev) => ({
-      ...prev,
-      selection: { clientId, conceptId, batchId },
-    }));
+    setWorkspace((prev) => {
+      if (
+        prev.selection?.clientId === clientId &&
+        prev.selection?.conceptId === conceptId &&
+        prev.selection?.batchId === batchId
+      ) {
+        return prev;
+      }
+      return { ...prev, selection: { clientId, conceptId, batchId } };
+    });
   };
 
   const handleGenerate = async (clientId: string, conceptId: string) => {
