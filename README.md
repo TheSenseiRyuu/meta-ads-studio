@@ -6,6 +6,7 @@ Webapp full-stack qui génère des Ads Meta (copy + direction créative + prompt
 - Brief complet marque/produit/audience.
 - Stratégie créative + insights + angles + hooks.
 - Variantes Ads prêtes à déployer (CTA, headline, description, placements).
+- Génération de visuels SVG par variante.
 - Export JSON.
 - Historique local.
 

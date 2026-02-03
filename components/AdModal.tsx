@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Image as ImageIcon, Heart } from 'lucide-react';
+import { X, Copy, Image as ImageIcon, Heart, Download, Wand2 } from 'lucide-react';
 import { AdVariant } from '../types';
+import { Button } from './Button';
 
 interface AdModalProps {
   variant: AdVariant | null;
   onClose: () => void;
   onToggleFavorite: (id: string) => void;
+  onGenerateVisual: (variant: AdVariant) => void;
+  isGeneratingVisual: boolean;
+  onDownloadVisual: (variant: AdVariant) => void;
 }
 
 const copyToClipboard = async (text: string) => {
@@ -15,7 +19,25 @@ const copyToClipboard = async (text: string) => {
   }
 };
 
-export const AdModal: React.FC<AdModalProps> = ({ variant, onClose, onToggleFavorite }) => {
+export const AdModal: React.FC<AdModalProps> = ({
+  variant,
+  onClose,
+  onToggleFavorite,
+  onGenerateVisual,
+  isGeneratingVisual,
+  onDownloadVisual,
+}) => {
+  useEffect(() => {
+    if (!variant) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [variant, onClose]);
+
   return (
     <AnimatePresence>
       {variant && (
@@ -24,14 +46,16 @@ export const AdModal: React.FC<AdModalProps> = ({ variant, onClose, onToggleFavo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={onClose}
         >
           <motion.div
-            className="relative w-full max-w-3xl rounded-3xl border border-zinc-800 bg-zinc-950/95 p-6 shadow-2xl"
+            className="relative w-full max-w-3xl rounded-3xl border border-zinc-800 bg-zinc-950/95 shadow-2xl max-h-[90vh] overflow-y-auto"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="sticky top-0 z-10 bg-zinc-950/95 border-b border-zinc-800 px-6 pt-6 pb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
                   {variant.placement}
@@ -58,7 +82,49 @@ export const AdModal: React.FC<AdModalProps> = ({ variant, onClose, onToggleFavo
               </div>
             </div>
 
-            <div className="grid gap-5 text-sm text-zinc-200">
+            <div className="grid gap-5 text-sm text-zinc-200 px-6 pb-6">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-zinc-400">Visual</p>
+                    <p className="text-sm text-zinc-200">Génération de visuel</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<Wand2 className="w-4 h-4" />}
+                      isLoading={isGeneratingVisual}
+                      onClick={() => onGenerateVisual(variant)}
+                    >
+                      Générer
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={<Download className="w-4 h-4" />}
+                      onClick={() => onDownloadVisual(variant)}
+                      disabled={!variant.visualSvg}
+                    >
+                      Télécharger
+                    </Button>
+                  </div>
+                </div>
+                {variant.visualSvg ? (
+                  <div className="rounded-xl overflow-hidden border border-zinc-800 bg-white">
+                    <img
+                      alt={`Visuel ${variant.name}`}
+                      className="w-full h-auto"
+                      src={`data:image/svg+xml;utf8,${encodeURIComponent(variant.visualSvg)}`}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-xs text-zinc-500">
+                    Aucun visuel généré pour cette variante.
+                  </div>
+                )}
+              </div>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                   <div className="flex items-center justify-between mb-2">

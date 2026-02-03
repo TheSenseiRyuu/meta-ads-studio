@@ -45,7 +45,7 @@ const parseJsonSafe = (text) => {
   }
 };
 
-const runGemini = async ({ prompt, model }) => {
+const runGemini = async ({ prompt, model, responseType = 'json' }) => {
   const args = ['--prompt', prompt, '--output-format', 'json'];
   if (model) {
     args.push('--model', model);
@@ -64,6 +64,10 @@ const runGemini = async ({ prompt, model }) => {
   const responseText = extractResponse(parsed);
   if (!responseText) {
     throw new Error('Gemini CLI returned empty response.');
+  }
+
+  if (responseType === 'text') {
+    return responseText;
   }
 
   const responseJson = parseJsonSafe(responseText);
@@ -103,13 +107,83 @@ app.post('/api/generate', async (req, res) => {
 
     const prompt = buildPrompt(brief);
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const responseJson = await runGemini({ prompt, model });
+    const responseJson = await runGemini({ prompt, model, responseType: 'json' });
 
     return res.json(responseJson);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       message: error?.message || 'Erreur Gemini CLI.',
+    });
+  }
+});
+
+const extractSvg = (text) => {
+  if (!text) return null;
+  const match = text.match(/<svg[\s\S]*?<\/svg>/i);
+  return match ? match[0] : null;
+};
+
+app.post('/api/generate-visual', async (req, res) => {
+  try {
+    const { variant, brandName, productName, language } = req.body || {};
+    if (!variant) {
+      return res.status(400).json({ message: 'Variant manquant.' });
+    }
+
+    const placement = variant.placement || 'Feed';
+    const dimensions = {
+      Feed: { width: 1080, height: 1350 },
+      Reels: { width: 1080, height: 1920 },
+      Stories: { width: 1080, height: 1920 },
+      Explore: { width: 1080, height: 1080 },
+      Messenger: { width: 1200, height: 628 },
+    };
+    const size = dimensions[placement] || dimensions.Feed;
+    const prompt = `
+Tu es un designer senior spécialisé Meta Ads.
+Crée un VISUEL publicitaire sous forme de SVG.
+Le SVG doit être complet, autonome, et sans ressources externes.
+
+MARQUE: ${brandName || ''}
+PRODUIT: ${productName || ''}
+PLACEMENT: ${placement}
+OBJECTIF: ${variant.objective}
+TON: ${variant.tone}
+LANGUE: ${language || 'Français'}
+
+COPIES:
+- Headline: ${variant.headline}
+- Primary text: ${variant.primaryText}
+- Offer: ${variant.offer || ''}
+- Proof: ${variant.proof || ''}
+- CTA: ${variant.cta}
+
+CONCEPT: ${variant.visualConcept}
+PROMPT IMAGE: ${variant.imagePrompt}
+
+SPÉCIFICATIONS:
+- Taille: ${size.width}x${size.height}.
+- Inclure un fond élégant, un espace produit (placeholder graphique), et une zone texte lisible.
+- Respecter une zone de sécurité avec 8% de marge.
+- Utiliser des formes vectorielles simples, gradients doux, typographie lisible.
+- Ne pas inclure d'images externes ni de textes personnels.
+- Sortir UNIQUEMENT le SVG (commence par <svg> et finit par </svg>).
+`;
+
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const responseText = await runGemini({ prompt, model, responseType: 'text' });
+    const svg = extractSvg(responseText);
+
+    if (!svg) {
+      throw new Error('Impossible de générer un SVG valide.');
+    }
+
+    return res.json({ svg });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: error?.message || 'Erreur génération visuel.',
     });
   }
 });

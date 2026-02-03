@@ -7,10 +7,10 @@ import { HistoryPanel } from './components/HistoryPanel';
 import IntroScreen from './components/IntroScreen';
 import Loading from './components/Loading';
 import { Button } from './components/Button';
-import { generateAds, getHealth, HealthStatus } from './services/api';
+import { generateAds, generateVisual, getHealth, HealthStatus } from './services/api';
 import { AdRun, AdVariant, BrandBrief, GenerationResponse, QualityAssurance, StrategyBoard } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Download, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Download, RefreshCw, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 
 const defaultBrief: BrandBrief = {
   brandName: 'Nova Skincare',
@@ -52,6 +52,8 @@ const App: React.FC = () => {
   const [runs, setRuns] = useLocalStorage<AdRun[]>('meta-ads-history', []);
   const [loadingStep, setLoadingStep] = useState(1);
   const [loadingStatus, setLoadingStatus] = useState('Brief scan');
+  const [visualLoadingId, setVisualLoadingId] = useState<string | null>(null);
+  const [visualBatchLoading, setVisualBatchLoading] = useState(false);
 
   useEffect(() => {
     getHealth()
@@ -122,6 +124,64 @@ const App: React.FC = () => {
         prev ? { ...prev, favorite: !prev.favorite } : prev
       );
     }
+  };
+
+  const handleGenerateVisual = async (variant: AdVariant) => {
+    setVisualLoadingId(variant.id);
+    setError(null);
+    try {
+      const result = await generateVisual({
+        variant,
+        brandName: brief.brandName,
+        productName: brief.productName,
+        language: brief.language,
+      });
+      setVariants((prev) =>
+        prev.map((item) => (item.id === variant.id ? { ...item, visualSvg: result.svg } : item))
+      );
+      if (selectedVariant?.id === variant.id) {
+        setSelectedVariant({ ...variant, visualSvg: result.svg });
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Erreur génération visuel.');
+    } finally {
+      setVisualLoadingId(null);
+    }
+  };
+
+  const handleGenerateAllVisuals = async () => {
+    if (variants.length === 0) return;
+    setVisualBatchLoading(true);
+    setError(null);
+    for (const variant of variants) {
+      if (variant.visualSvg) continue;
+      try {
+        const result = await generateVisual({
+          variant,
+          brandName: brief.brandName,
+          productName: brief.productName,
+          language: brief.language,
+        });
+        setVariants((prev) =>
+          prev.map((item) => (item.id === variant.id ? { ...item, visualSvg: result.svg } : item))
+        );
+      } catch (err: any) {
+        setError(err?.message || 'Erreur génération visuel.');
+        break;
+      }
+    }
+    setVisualBatchLoading(false);
+  };
+
+  const downloadVisual = (variant: AdVariant) => {
+    if (!variant.visualSvg) return;
+    const blob = new Blob([variant.visualSvg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${variant.name.toLowerCase().replace(/\s+/g, '-')}.svg`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleSelectRun = (run: AdRun) => {
@@ -233,7 +293,19 @@ const App: React.FC = () => {
                   <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Ad Variants</p>
                   <h3 className="text-lg font-display">Board de création</h3>
                 </div>
-                <div className="text-xs text-zinc-400">{variants.length} variantes</div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<ImageIcon className="w-4 h-4" />}
+                    onClick={handleGenerateAllVisuals}
+                    isLoading={visualBatchLoading}
+                    disabled={variants.length === 0}
+                  >
+                    Générer les visuels
+                  </Button>
+                  <div className="text-xs text-zinc-400">{variants.length} variantes</div>
+                </div>
               </div>
               <AdGrid
                 variants={variants}
@@ -250,6 +322,9 @@ const App: React.FC = () => {
         variant={selectedVariant}
         onClose={() => setSelectedVariant(null)}
         onToggleFavorite={toggleFavorite}
+        onGenerateVisual={handleGenerateVisual}
+        isGeneratingVisual={visualLoadingId === selectedVariant?.id}
+        onDownloadVisual={downloadVisual}
       />
     </div>
   );

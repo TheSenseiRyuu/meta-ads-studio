@@ -64,6 +64,7 @@ export interface AdVariant {
   tone: string;
   keywords: string[];
   favorite?: boolean;
+  visualSvg?: string;
 }
 
 export interface QualityAssurance {
