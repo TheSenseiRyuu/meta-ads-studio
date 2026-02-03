@@ -9,17 +9,27 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) {
+      onComplete();
+      return;
+    }
+
     const timers = [
-      setTimeout(() => setPhase(1), 1200),
-      setTimeout(() => setPhase(2), 3600),
-      setTimeout(() => setPhase(3), 5200),
+      setTimeout(() => setPhase(1), 300),
+      setTimeout(() => setPhase(2), 900),
+      setTimeout(() => setPhase(3), 1400),
+      setTimeout(() => onComplete(), 1800),
     ];
 
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-center overflow-hidden font-display">
+    <div
+      className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-center overflow-hidden font-display"
+      onClick={onComplete}
+    >
       <style>{`
         @keyframes orbit {
           0% { transform: translate(-50%, -50%) rotate(0deg); }
@@ -92,7 +102,10 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
           Brief to high-performing ads in minutes
         </p>
         <button
-          onClick={onComplete}
+          onClick={(event) => {
+            event.stopPropagation();
+            onComplete();
+          }}
           className="group relative px-8 py-3 bg-transparent overflow-hidden rounded-full"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-cyan-500 opacity-20 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -106,6 +119,16 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
           </div>
         </button>
       </div>
+
+      <button
+        onClick={(event) => {
+          event.stopPropagation();
+          onComplete();
+        }}
+        className="absolute top-6 right-6 text-xs uppercase tracking-[0.3em] text-zinc-400 hover:text-white border border-zinc-800 rounded-full px-3 py-1 bg-zinc-900/60"
+      >
+        Skip
+      </button>
     </div>
   );
 };

@@ -50,7 +50,13 @@ const loadingHints = [
 ];
 
 const App: React.FC = () => {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      return localStorage.getItem('intro_seen') !== '1';
+    } catch {
+      return true;
+    }
+  });
   const [brief, setBrief] = useLocalStorage<BrandBrief>('meta-ads-brief', defaultBrief);
   const [strategy, setStrategy] = useState<StrategyBoard | null>(null);
   const [qa, setQa] = useState<QualityAssurance | null>(null);
@@ -311,7 +317,18 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      {showIntro && <IntroScreen onComplete={() => setShowIntro(false)} />}
+      {showIntro && (
+        <IntroScreen
+          onComplete={() => {
+            try {
+              localStorage.setItem('intro_seen', '1');
+            } catch {
+              // ignore
+            }
+            setShowIntro(false);
+          }}
+        />
+      )}
 
       <div className="relative">
         <div className="absolute inset-0 pointer-events-none">
