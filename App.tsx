@@ -876,7 +876,6 @@ const AppShell: React.FC = () => {
     setError(null);
     try {
       await setSettings(nextSettings);
-      setShowSettings(false);
       if (nextSettings.apiKey) {
         setIsLoadingModels(true);
         const modelsResponse = await getModels(nextSettings.apiKey);
