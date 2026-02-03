@@ -7,6 +7,7 @@ export const buildPrompt = (brief) => {
   const placements = brief.placements?.length ? brief.placements.join(', ') : 'Feed';
   const variants = Number(brief.variants || 6);
   const language = sanitize(brief.language || 'Français');
+  const aspectRatio = sanitize(brief.aspectRatio || 'Auto');
 
   return `
 Tu es un directeur créatif senior spécialisé en Meta Ads.
@@ -25,6 +26,7 @@ BRIEF:
 - Contraintes: ${sanitize(brief.constraints)}
 - Objectif: ${sanitize(brief.objective)}
 - Placements: ${placements}
+- Aspect ratio: ${aspectRatio} (Meta formats)
 - Tonalité: ${sanitize(brief.tone)}
 - Langue: ${language}
 - Budget: ${sanitize(brief.budget)}

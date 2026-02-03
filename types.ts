@@ -6,6 +6,7 @@ export type Objective =
   | 'Awareness';
 
 export type Placement = 'Feed' | 'Reels' | 'Stories' | 'Explore' | 'Messenger';
+export type AspectRatio = 'Auto' | '1:1' | '4:5' | '9:16' | '1.91:1';
 
 export type Tone =
   | 'Bold'
@@ -29,6 +30,7 @@ export interface BrandBrief {
   constraints: string;
   objective: Objective;
   placements: Placement[];
+  aspectRatio: AspectRatio;
   tone: Tone;
   language: string;
   variants: number;

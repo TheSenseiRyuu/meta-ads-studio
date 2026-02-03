@@ -36,6 +36,7 @@ export const generateVisual = async (payload: {
   brandName: string;
   productName: string;
   language: string;
+  aspectRatio: string;
 }): Promise<{ svg: string }> => {
   const res = await fetch('/api/generate-visual', {
     method: 'POST',

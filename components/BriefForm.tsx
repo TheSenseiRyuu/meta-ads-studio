@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrandBrief, Placement, Tone, Objective } from '../types';
+import { BrandBrief, Placement, Tone, Objective, AspectRatio } from '../types';
 import { Button } from './Button';
 import { Sparkles, Zap, Target, Megaphone, SlidersHorizontal } from 'lucide-react';
 
@@ -13,6 +13,13 @@ interface BriefFormProps {
 const placementOptions: Placement[] = ['Feed', 'Reels', 'Stories', 'Explore', 'Messenger'];
 const toneOptions: Tone[] = ['Bold', 'Playful', 'Minimal', 'Luxury', 'Direct', 'Warm', 'Technical'];
 const objectiveOptions: Objective[] = ['Sales', 'Leads', 'Traffic', 'App Installs', 'Awareness'];
+const aspectRatioOptions: { value: AspectRatio; label: string; hint: string }[] = [
+  { value: 'Auto', label: 'Auto', hint: 'Use placement' },
+  { value: '1:1', label: '1:1', hint: 'Feed / Explore' },
+  { value: '4:5', label: '4:5', hint: 'Feed vertical' },
+  { value: '9:16', label: '9:16', hint: 'Stories / Reels' },
+  { value: '1.91:1', label: '1.91:1', hint: 'Landscape' },
+];
 
 export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerate, isGenerating }) => {
   const updateField = <K extends keyof BrandBrief>(key: K, value: BrandBrief[K]) => {
@@ -202,6 +209,29 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
           </label>
 
           <label className="text-sm text-zinc-300">
+            Aspect ratio (Meta)
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-2">
+              {aspectRatioOptions.map((ratio) => (
+                <button
+                  type="button"
+                  key={ratio.value}
+                  onClick={() => updateField('aspectRatio', ratio.value)}
+                  className={`rounded-xl border px-3 py-2 text-left transition-colors ${
+                    brief.aspectRatio === ratio.value
+                      ? 'border-emerald-400 bg-emerald-500/10 text-emerald-100'
+                      : 'border-zinc-800 text-zinc-300 hover:border-emerald-400/60'
+                  }`}
+                >
+                  <div className="text-sm font-display">{ratio.label}</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                    {ratio.hint}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </label>
+
+          <label className="text-sm text-zinc-300">
             Langue de sortie
             <input
               value={brief.language}
@@ -236,7 +266,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
               Nombre de variantes
               <input
                 type="range"
-                min={3}
+                min={1}
                 max={10}
                 value={brief.variants}
                 onChange={(e) => updateField('variants', Number(e.target.value))}

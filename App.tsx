@@ -25,6 +25,7 @@ const defaultBrief: BrandBrief = {
   constraints: "Pas de promesses médicales. Éviter 'miracle'.",
   objective: 'Sales',
   placements: ['Feed', 'Reels'],
+  aspectRatio: 'Auto',
   tone: 'Warm',
   language: 'Français',
   variants: 6,
@@ -135,6 +136,7 @@ const App: React.FC = () => {
         brandName: brief.brandName,
         productName: brief.productName,
         language: brief.language,
+        aspectRatio: brief.aspectRatio,
       });
       setVariants((prev) =>
         prev.map((item) => (item.id === variant.id ? { ...item, visualSvg: result.svg } : item))
@@ -161,6 +163,7 @@ const App: React.FC = () => {
           brandName: brief.brandName,
           productName: brief.productName,
           language: brief.language,
+          aspectRatio: brief.aspectRatio,
         });
         setVariants((prev) =>
           prev.map((item) => (item.id === variant.id ? { ...item, visualSvg: result.svg } : item))
@@ -325,6 +328,7 @@ const App: React.FC = () => {
         onGenerateVisual={handleGenerateVisual}
         isGeneratingVisual={visualLoadingId === selectedVariant?.id}
         onDownloadVisual={downloadVisual}
+        aspectRatio={brief.aspectRatio}
       />
     </div>
   );

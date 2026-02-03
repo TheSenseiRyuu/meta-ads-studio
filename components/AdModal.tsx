@@ -11,6 +11,7 @@ interface AdModalProps {
   onGenerateVisual: (variant: AdVariant) => void;
   isGeneratingVisual: boolean;
   onDownloadVisual: (variant: AdVariant) => void;
+  aspectRatio: string;
 }
 
 const copyToClipboard = async (text: string) => {
@@ -26,7 +27,27 @@ export const AdModal: React.FC<AdModalProps> = ({
   onGenerateVisual,
   isGeneratingVisual,
   onDownloadVisual,
+  aspectRatio,
 }) => {
+  const getSafeZone = () => {
+    if (!variant) return { top: 8, bottom: 8, side: 8 };
+    if (aspectRatio === '9:16' || variant.placement === 'Stories' || variant.placement === 'Reels') {
+      return { top: 12, bottom: 20, side: 6 };
+    }
+    if (aspectRatio === '4:5' || variant.placement === 'Feed') {
+      return { top: 8, bottom: 10, side: 6 };
+    }
+    if (aspectRatio === '1:1' || variant.placement === 'Explore') {
+      return { top: 8, bottom: 8, side: 8 };
+    }
+    if (aspectRatio === '1.91:1' || variant.placement === 'Messenger') {
+      return { top: 10, bottom: 10, side: 8 };
+    }
+    return { top: 8, bottom: 8, side: 8 };
+  };
+
+  const safeZone = getSafeZone();
+
   useEffect(() => {
     if (!variant) return;
     const onKey = (event: KeyboardEvent) => {
@@ -111,12 +132,26 @@ export const AdModal: React.FC<AdModalProps> = ({
                   </div>
                 </div>
                 {variant.visualSvg ? (
-                  <div className="rounded-xl overflow-hidden border border-zinc-800 bg-white">
+                  <div className="relative rounded-xl overflow-hidden border border-zinc-800 bg-white">
                     <img
                       alt={`Visuel ${variant.name}`}
                       className="w-full h-auto"
                       src={`data:image/svg+xml;utf8,${encodeURIComponent(variant.visualSvg)}`}
                     />
+                    <div className="pointer-events-none absolute inset-0">
+                      <div
+                        className="absolute border border-dashed border-emerald-300/60 bg-emerald-400/10"
+                        style={{
+                          top: `${safeZone.top}%`,
+                          bottom: `${safeZone.bottom}%`,
+                          left: `${safeZone.side}%`,
+                          right: `${safeZone.side}%`,
+                        }}
+                      ></div>
+                      <div className="absolute left-3 top-3 rounded-full bg-zinc-950/80 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-200">
+                        Safe zone
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-xs text-zinc-500">

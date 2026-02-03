@@ -126,20 +126,48 @@ const extractSvg = (text) => {
 
 app.post('/api/generate-visual', async (req, res) => {
   try {
-    const { variant, brandName, productName, language } = req.body || {};
+    const { variant, brandName, productName, language, aspectRatio } = req.body || {};
     if (!variant) {
       return res.status(400).json({ message: 'Variant manquant.' });
     }
 
     const placement = variant.placement || 'Feed';
-    const dimensions = {
+    const placementDimensions = {
       Feed: { width: 1080, height: 1350 },
       Reels: { width: 1080, height: 1920 },
       Stories: { width: 1080, height: 1920 },
       Explore: { width: 1080, height: 1080 },
       Messenger: { width: 1200, height: 628 },
     };
-    const size = dimensions[placement] || dimensions.Feed;
+    const ratioDimensions = {
+      '1:1': { width: 1080, height: 1080 },
+      '4:5': { width: 1080, height: 1350 },
+      '9:16': { width: 1080, height: 1920 },
+      '1.91:1': { width: 1200, height: 628 },
+    };
+
+    const normalizedRatio = typeof aspectRatio === 'string' ? aspectRatio : 'Auto';
+    const size =
+      normalizedRatio !== 'Auto' && ratioDimensions[normalizedRatio]
+        ? ratioDimensions[normalizedRatio]
+        : placementDimensions[placement] || placementDimensions.Feed;
+
+    const getSafeZone = () => {
+      if (normalizedRatio === '9:16' || placement === 'Stories' || placement === 'Reels') {
+        return { top: 12, bottom: 20, side: 6 };
+      }
+      if (normalizedRatio === '4:5' || placement === 'Feed') {
+        return { top: 8, bottom: 10, side: 6 };
+      }
+      if (normalizedRatio === '1:1' || placement === 'Explore') {
+        return { top: 8, bottom: 8, side: 8 };
+      }
+      if (normalizedRatio === '1.91:1' || placement === 'Messenger') {
+        return { top: 10, bottom: 10, side: 8 };
+      }
+      return { top: 8, bottom: 8, side: 8 };
+    };
+    const safeZone = getSafeZone();
     const prompt = `
 Tu es un designer senior spécialisé Meta Ads.
 Crée un VISUEL publicitaire sous forme de SVG.
@@ -148,6 +176,7 @@ Le SVG doit être complet, autonome, et sans ressources externes.
 MARQUE: ${brandName || ''}
 PRODUIT: ${productName || ''}
 PLACEMENT: ${placement}
+ASPECT RATIO: ${normalizedRatio}
 OBJECTIF: ${variant.objective}
 TON: ${variant.tone}
 LANGUE: ${language || 'Français'}
@@ -163,10 +192,10 @@ CONCEPT: ${variant.visualConcept}
 PROMPT IMAGE: ${variant.imagePrompt}
 
 SPÉCIFICATIONS:
-- Taille: ${size.width}x${size.height}.
-- Inclure un fond élégant, un espace produit (placeholder graphique), et une zone texte lisible.
-- Respecter une zone de sécurité avec 8% de marge.
-- Utiliser des formes vectorielles simples, gradients doux, typographie lisible.
+    - Taille: ${size.width}x${size.height}.
+    - Inclure un fond élégant, un espace produit (placeholder graphique), et une zone texte lisible.
+    - SAFE ZONE: laisser vides ${safeZone.top}% en haut, ${safeZone.bottom}% en bas, ${safeZone.side}% sur les côtés (pas de textes/logos critiques).
+    - Utiliser des formes vectorielles simples, gradients doux, typographie lisible.
 - Ne pas inclure d'images externes ni de textes personnels.
 - Sortir UNIQUEMENT le SVG (commence par <svg> et finit par </svg>).
 `;
