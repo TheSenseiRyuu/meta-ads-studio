@@ -11,6 +11,7 @@ import { generateAds, generateVisual, getHealth, HealthStatus } from './services
 import { AdRun, AdVariant, BrandBrief, GenerationResponse, QualityAssurance, StrategyBoard } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Download, RefreshCw, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { createId } from './utils/id';
 
 const defaultBrief: BrandBrief = {
   brandName: 'Nova Skincare',
@@ -100,7 +101,7 @@ const App: React.FC = () => {
       setQa(response.qa);
 
       const newRun: AdRun = {
-        id: crypto.randomUUID(),
+        id: createId(),
         createdAt: Date.now(),
         brandName: brief.brandName,
         objective: brief.objective,
