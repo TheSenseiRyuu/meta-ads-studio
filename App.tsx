@@ -16,6 +16,7 @@ import { Button } from './components/Button';
 import ClientsPage from './pages/ClientsPage';
 import ClientPage from './pages/ClientPage';
 import ConceptPage from './pages/ConceptPage';
+import BatchPage from './pages/BatchPage';
 import {
   generateAds,
   generateVisual,
@@ -655,6 +656,7 @@ const AppShell: React.FC = () => {
   }, [workspace.clients]);
 
   const step = useMemo(() => {
+    if (location.pathname.includes('/batch/')) return 4;
     if (location.pathname.includes('/concept/')) return 3;
     if (location.pathname.includes('/client/')) return 2;
     return 1;
@@ -669,6 +671,13 @@ const AppShell: React.FC = () => {
     {
       label: 'Concept',
       path: activeClient && activeConcept ? `/client/${activeClient.id}/concept/${activeConcept.id}` : null,
+    },
+    {
+      label: 'Batch',
+      path:
+        activeClient && activeConcept && activeBatch
+          ? `/client/${activeClient.id}/concept/${activeConcept.id}/batch/${activeBatch.id}`
+          : null,
     },
   ];
 
@@ -736,28 +745,46 @@ const AppShell: React.FC = () => {
     useEffect(() => {
       handleSelectConcept(clientId, conceptId);
     }, [clientId, conceptId]);
-    const batch =
-      (selection.batchId && concept.batches.find((item) => item.id === selection.batchId)) ||
-      concept.batches[0] ||
-      null;
 
     return (
       <ConceptPage
         client={client}
         concept={concept}
-        batch={batch}
         onUpdateConcept={updateConcept}
         onSelectBatch={handleSelectBatch}
         onGenerate={handleGenerate}
-        onSelectVariant={handleSelectVariant}
-        onToggleFavorite={toggleFavorite}
-        onGenerateAllVisuals={handleGenerateAllVisuals}
-        onExportJson={exportJson}
+      />
+    );
+  };
+
+  const BatchRoute: React.FC = () => {
+    const { clientId, conceptId, batchId } = useParams();
+    if (!clientId || !conceptId || !batchId) return <Navigate to="/" replace />;
+    const client = workspace.clients.find((item) => item.id === clientId);
+    if (!client) return <Navigate to="/" replace />;
+    const concept = client.concepts.find((item) => item.id === conceptId);
+    if (!concept) return <Navigate to={`/client/${clientId}`} replace />;
+    const batch = concept.batches.find((item) => item.id === batchId);
+    if (!batch) return <Navigate to={`/client/${clientId}/concept/${conceptId}`} replace />;
+
+    useEffect(() => {
+      handleSelectBatch(clientId, conceptId, batchId);
+    }, [clientId, conceptId, batchId]);
+
+    return (
+      <BatchPage
+        client={client}
+        concept={concept}
+        batch={batch}
         isGenerating={isGenerating}
         visualBatchLoading={visualBatchLoading}
         loadingStatus={loadingStatus}
         loadingStep={loadingStep}
         loadingHints={loadingHints}
+        onSelectVariant={handleSelectVariant}
+        onToggleFavorite={toggleFavorite}
+        onGenerateAllVisuals={handleGenerateAllVisuals}
+        onExportJson={exportJson}
       />
     );
   };
@@ -797,7 +824,7 @@ const AppShell: React.FC = () => {
               >
                 Tous les clients
               </Link>
-              {activeClient && (
+              {step >= 2 && activeClient && (
                 <Link
                   to={`/client/${activeClient.id}`}
                   className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-100"
@@ -805,7 +832,7 @@ const AppShell: React.FC = () => {
                   Client: {activeClient.name}
                 </Link>
               )}
-              {activeClient && activeConcept && (
+              {step >= 3 && activeClient && activeConcept && (
                 <Link
                   to={`/client/${activeClient.id}/concept/${activeConcept.id}`}
                   className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-cyan-100"
@@ -813,7 +840,7 @@ const AppShell: React.FC = () => {
                   Concept: {activeConcept.name}
                 </Link>
               )}
-              {activeBatch && (
+              {step >= 4 && activeBatch && (
                 <span className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-zinc-200">
                   Batch: {activeBatch.name}
                 </span>
@@ -907,6 +934,7 @@ const AppShell: React.FC = () => {
             />
             <Route path="/client/:clientId" element={<ClientRoute />} />
             <Route path="/client/:clientId/concept/:conceptId" element={<ConceptRoute />} />
+            <Route path="/client/:clientId/concept/:conceptId/batch/:batchId" element={<BatchRoute />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
