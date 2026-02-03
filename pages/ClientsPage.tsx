@@ -1,39 +1,21 @@
-import React, { useEffect } from 'react';
-import { Client, GeminiModelOption, GeminiSettings } from '../types';
+import React, { useMemo, useState } from 'react';
+import { Client } from '../types';
 import { ClientList } from '../components/ClientList';
 import { useNavigate } from 'react-router-dom';
-import { SettingsPanel } from '../components/SettingsPanel';
 
 interface ClientsPageProps {
   clients: Client[];
   onCreateClient: () => Client;
   onSelectClient: (id: string) => void;
-  settings: GeminiSettings;
-  onChangeSettings: (settings: GeminiSettings) => void;
-  onSaveSettings: (settings: GeminiSettings) => void;
-  isSavingSettings: boolean;
-  models: GeminiModelOption[];
-  textModels: GeminiModelOption[];
-  imageModels: GeminiModelOption[];
-  isLoadingModels: boolean;
-  onRefreshModels: () => void;
 }
 
 const ClientsPage: React.FC<ClientsPageProps> = ({
   clients,
   onCreateClient,
   onSelectClient,
-  settings,
-  onChangeSettings,
-  onSaveSettings,
-  isSavingSettings,
-  models,
-  textModels,
-  imageModels,
-  isLoadingModels,
-  onRefreshModels,
 }) => {
   const navigate = useNavigate();
+  const [query, setQuery] = useState('');
 
   const handleCreate = () => {
     const client = onCreateClient();
@@ -45,47 +27,77 @@ const ClientsPage: React.FC<ClientsPageProps> = ({
     navigate(`/client/${id}`);
   };
 
-  useEffect(() => {
-    if (settings.apiKey && models.length === 0 && !isLoadingModels) {
-      onRefreshModels();
-    }
-  }, [settings.apiKey, models.length, isLoadingModels, onRefreshModels]);
+  const stats = useMemo(() => {
+    const totalConcepts = clients.reduce((sum, client) => sum + client.concepts.length, 0);
+    const totalBriefs = clients.reduce(
+      (sum, client) => sum + client.concepts.reduce((acc, concept) => acc + concept.batches.length, 0),
+      0
+    );
+    const totalAds = clients.reduce(
+      (sum, client) =>
+        sum +
+        client.concepts.reduce(
+          (acc, concept) => acc + concept.batches.reduce((ads, brief) => ads + brief.variants.length, 0),
+          0
+        ),
+      0
+    );
+    return {
+      clients: clients.length,
+      concepts: totalConcepts,
+      briefs: totalBriefs,
+      ads: totalAds,
+    };
+  }, [clients]);
+
+  const filteredClients = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return clients;
+    return clients.filter(
+      (client) =>
+        client.name.toLowerCase().includes(trimmed) ||
+        client.brandName.toLowerCase().includes(trimmed) ||
+        client.industry.toLowerCase().includes(trimmed)
+    );
+  }, [clients, query]);
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Meta Ads Studio</p>
-        <h2 className="text-3xl font-display text-white">Tableau de bord</h2>
-        <p className="text-sm text-zinc-400 mt-2 max-w-2xl">
-          Crée tes clients, configure Gemini API et lance des briefs ads Meta en quelques minutes.
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-zinc-400">
+          Crée tes clients, lance des briefs et gère tout ton portefeuille.
         </p>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Rechercher un client…"
+          className="w-56 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+        />
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] items-start">
-        <ClientList
-          clients={clients}
-          selectedId={undefined}
-          onSelect={handleSelect}
-          onCreate={handleCreate}
-        />
-        <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Gemini API</p>
-            <h3 className="text-lg font-display text-white">Paramètres globaux</h3>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Clients', value: stats.clients },
+          { label: 'Concepts', value: stats.concepts },
+          { label: 'Briefs', value: stats.briefs },
+          { label: 'Ads', value: stats.ads },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-4"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">{item.label}</p>
+            <p className="mt-2 text-2xl font-display text-white">{item.value}</p>
           </div>
-          <SettingsPanel
-            settings={settings}
-            onChange={onChangeSettings}
-            onSave={onSaveSettings}
-            isSaving={isSavingSettings}
-            models={models}
-            textModels={textModels}
-            imageModels={imageModels}
-            isLoadingModels={isLoadingModels}
-            onRefreshModels={onRefreshModels}
-          />
-        </div>
+        ))}
       </div>
+
+      <ClientList
+        clients={filteredClients}
+        selectedId={undefined}
+        onSelect={handleSelect}
+        onCreate={handleCreate}
+      />
     </div>
   );
 };

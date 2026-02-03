@@ -4,8 +4,8 @@ import {
   Routes,
   Route,
   Navigate,
-  Link,
   useLocation,
+  useNavigate,
   useParams,
 } from 'react-router-dom';
 import IntroScreen from './components/IntroScreen';
@@ -15,6 +15,7 @@ import ClientsPage from './pages/ClientsPage';
 import ClientPage from './pages/ClientPage';
 import ConceptPage from './pages/ConceptPage';
 import BatchPage from './pages/BatchPage';
+import SettingsPage from './pages/SettingsPage';
 import {
   generateAds,
   generateVisual,
@@ -185,6 +186,7 @@ const AppShell: React.FC = () => {
   const [visualBatchLoading, setVisualBatchLoading] = useState(false);
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setWorkspace((prev) => {
@@ -710,6 +712,7 @@ const AppShell: React.FC = () => {
   };
 
   const routeType = useMemo(() => {
+    if (location.pathname.includes('/settings')) return 'settings';
     if (location.pathname.includes('/brief/')) return 'brief';
     if (location.pathname.includes('/concept/')) return 'concept';
     if (location.pathname.includes('/client/')) return 'client';
@@ -720,6 +723,7 @@ const AppShell: React.FC = () => {
     if (routeType === 'client') return `Client: ${activeClient?.name || 'Client'}`;
     if (routeType === 'concept') return `Concept: ${activeConcept?.name || 'Concept'}`;
     if (routeType === 'brief') return `Brief: ${activeBatch?.name || 'Brief'}`;
+    if (routeType === 'settings') return 'Paramètres';
     return 'Clients';
   }, [routeType, activeClient?.name, activeConcept?.name, activeBatch?.name]);
 
@@ -731,6 +735,7 @@ const AppShell: React.FC = () => {
       return `/client/${activeClient.id}`;
     }
     if (routeType === 'client') return '/';
+    if (routeType === 'settings') return '/';
     return null;
   }, [routeType, activeClient?.id, activeConcept?.id]);
 
@@ -871,27 +876,30 @@ const AppShell: React.FC = () => {
         </div>
 
         <header className="relative z-10 px-6 md:px-12 py-6 flex items-center justify-between max-w-[1600px] mx-auto">
-          {routeType === 'clients' ? (
+          <div className="flex items-center gap-3">
+            {backPath && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(backPath)}
+              >
+                Retour
+              </Button>
+            )}
             <div>
               <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
-              <h1 className="text-2xl md:text-3xl font-display">Tableau de bord</h1>
+              <h1 className="text-2xl md:text-3xl font-display">
+                {routeType === 'clients' ? 'Tableau de bord' : headerTitle}
+              </h1>
             </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              {backPath && (
-                <Link
-                  to={backPath}
-                  className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-xs text-zinc-300 hover:border-emerald-400/50"
-                >
-                  Retour
-                </Link>
-              )}
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
-                <h1 className="text-2xl md:text-3xl font-display">{headerTitle}</h1>
-              </div>
-            </div>
-          )}
+          </div>
+          <div className="flex items-center gap-2">
+            {routeType !== 'settings' && (
+              <Button variant="secondary" size="sm" onClick={() => navigate('/settings')}>
+                Paramètres
+              </Button>
+            )}
+          </div>
         </header>
 
         {error && (
@@ -911,6 +919,16 @@ const AppShell: React.FC = () => {
                   clients={workspace.clients}
                   onCreateClient={handleCreateClient}
                   onSelectClient={handleSelectClient}
+                />
+              }
+            />
+            <Route path="/client/:clientId" element={<ClientRoute />} />
+            <Route path="/client/:clientId/concept/:conceptId" element={<ConceptRoute />} />
+            <Route path="/client/:clientId/concept/:conceptId/brief/:briefId" element={<BriefRoute />} />
+            <Route
+              path="/settings"
+              element={
+                <SettingsPage
                   settings={settings}
                   onChangeSettings={setSettingsState}
                   onSaveSettings={handleSaveSettings}
@@ -923,9 +941,6 @@ const AppShell: React.FC = () => {
                 />
               }
             />
-            <Route path="/client/:clientId" element={<ClientRoute />} />
-            <Route path="/client/:clientId/concept/:conceptId" element={<ConceptRoute />} />
-            <Route path="/client/:clientId/concept/:conceptId/brief/:briefId" element={<BriefRoute />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
