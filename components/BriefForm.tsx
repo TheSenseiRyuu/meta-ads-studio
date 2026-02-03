@@ -18,6 +18,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
   const updateField = <K extends keyof BrandBrief>(key: K, value: BrandBrief[K]) => {
     onChange({ ...brief, [key]: value });
   };
+  const canGenerate = Boolean(brief.brandName.trim() && brief.productName.trim());
 
   const togglePlacement = (placement: Placement) => {
     const exists = brief.placements.includes(placement);
@@ -258,6 +259,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
             icon={<Megaphone className="w-4 h-4" />}
             isLoading={isGenerating}
             onClick={onGenerate}
+            disabled={!canGenerate}
           >
             Générer les Ads
           </Button>
