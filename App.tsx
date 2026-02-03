@@ -625,13 +625,6 @@ const AppShell: React.FC = () => {
     return 'Clients';
   }, [routeType, activeClient?.name, activeConcept?.name, activeBatch?.name]);
 
-  const headerSubtitle = useMemo(() => {
-    if (routeType === 'clients') return '';
-    if (routeType === 'client') return 'Profil & espaces créa du client.';
-    if (routeType === 'concept') return 'Brief + batches du concept sélectionné.';
-    return 'Stratégie, ads et visuels du batch sélectionné.';
-  }, [routeType]);
-
   const backPath = useMemo(() => {
     if (routeType === 'batch' && activeClient && activeConcept) {
       return `/client/${activeClient.id}/concept/${activeConcept.id}`;
@@ -770,25 +763,26 @@ const AppShell: React.FC = () => {
           <div className="absolute top-20 right-0 w-96 h-96 bg-cyan-500/10 blur-[140px]" />
         </div>
 
-        <header className="relative z-10 px-6 md:px-12 py-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between max-w-[1200px] mx-auto">
-          <div className="max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
-            <h1 className="text-3xl md:text-4xl font-display">{headerTitle}</h1>
-            {headerSubtitle && (
-              <p className="text-sm text-zinc-400 mt-2">{headerSubtitle}</p>
-            )}
-            {backPath && (
-              <div className="mt-4">
+        <header className="relative z-10 px-6 md:px-12 py-6 flex items-center justify-between max-w-[1200px] mx-auto">
+          {routeType === 'clients' ? (
+            <div className="flex-1"></div>
+          ) : (
+            <div className="flex items-center gap-3">
+              {backPath && (
                 <Link
                   to={backPath}
                   className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-xs text-zinc-300 hover:border-emerald-400/50"
                 >
                   Retour
                 </Link>
+              )}
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-300">Meta Ads Studio</p>
+                <h1 className="text-2xl md:text-3xl font-display">{headerTitle}</h1>
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
+            </div>
+          )}
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
