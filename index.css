@@ -1,0 +1,13 @@
+body {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
