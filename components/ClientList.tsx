@@ -17,11 +17,11 @@ export const ClientList: React.FC<ClientListProps> = ({
   onCreate,
 }) => {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-xl h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
+    <section className="w-full">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-200">Clients</p>
-          <h3 className="text-lg font-display text-white">Portefeuille</h3>
+          <h3 className="text-xl font-display text-white">Portefeuille</h3>
         </div>
         <Button
           variant="secondary"
@@ -34,35 +34,41 @@ export const ClientList: React.FC<ClientListProps> = ({
       </div>
 
       {clients.length === 0 ? (
-        <div className="flex-1 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-4 text-zinc-500 text-sm">
+        <div className="rounded-2xl border border-dashed border-zinc-800/70 bg-zinc-950/40 p-10 text-zinc-500 text-sm text-center">
           Crée ton premier client pour démarrer.
         </div>
       ) : (
-        <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+        <div className="border-y border-zinc-800/80 divide-y divide-zinc-800/80">
           {clients.map((client) => {
             const isActive = client.id === selectedId;
             return (
               <button
                 key={client.id}
                 onClick={() => onSelect(client.id)}
-                className={`w-full text-left rounded-2xl border px-4 py-3 transition-colors ${
-                  isActive
-                    ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100'
-                    : 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-emerald-400/40'
+                className={`w-full text-left px-4 py-4 transition-colors ${
+                  isActive ? 'bg-emerald-500/10' : 'hover:bg-zinc-900/50'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-emerald-300" />
-                      <p className="text-sm font-display">{client.name}</p>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-1 h-8 w-8 rounded-xl border ${
+                        isActive
+                          ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200'
+                          : 'border-zinc-800 bg-zinc-900/60 text-emerald-300'
+                      } flex items-center justify-center`}
+                    >
+                      <Building2 className="w-4 h-4" />
                     </div>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {client.industry || 'Industrie à préciser'}
-                    </p>
+                    <div>
+                      <p className="text-base font-display text-white">{client.name}</p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {client.industry || 'Industrie à préciser'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-xs text-zinc-400 flex items-center gap-2">
-                    {client.concepts.length} concepts
+                  <div className="text-xs text-zinc-400 flex items-center gap-3">
+                    <span>{client.concepts.length} concepts</span>
                     <span className="flex items-center gap-1 text-emerald-300">
                       Ouvrir <ArrowRight className="w-3 h-3" />
                     </span>
@@ -73,6 +79,6 @@ export const ClientList: React.FC<ClientListProps> = ({
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 };

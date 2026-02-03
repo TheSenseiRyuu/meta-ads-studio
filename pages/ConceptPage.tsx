@@ -27,13 +27,13 @@ const ConceptPage: React.FC<ConceptPageProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <ConceptPanel
-          concept={concept}
-          onUpdate={(updates) => onUpdateConcept(client.id, concept.id, updates)}
-        />
+    <div className="w-full max-w-6xl mx-auto space-y-8">
+      <ConceptPanel
+        concept={concept}
+        onUpdate={(updates) => onUpdateConcept(client.id, concept.id, updates)}
+      />
 
+      <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] items-start">
         <BriefForm
           key={concept.id}
           brief={concept.brief}
@@ -43,36 +43,38 @@ const ConceptPage: React.FC<ConceptPageProps> = ({
           showGenerate={false}
         />
 
-        <BatchList
-          batches={concept.batches}
-          selectedId={undefined}
-          onSelect={(batchId) => {
-            onSelectBatch(client.id, concept.id, batchId);
-            navigate(`/client/${client.id}/concept/${concept.id}/batch/${batchId}`);
-          }}
-        />
+        <div className="space-y-6">
+          <BatchList
+            batches={concept.batches}
+            selectedId={undefined}
+            onSelect={(batchId) => {
+              onSelectBatch(client.id, concept.id, batchId);
+              navigate(`/client/${client.id}/concept/${concept.id}/batch/${batchId}`);
+            }}
+          />
 
-        {concept.batches.length === 0 && (
-          <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-8 text-zinc-400 text-sm">
-            Aucun batch pour ce concept. Lance une génération pour produire le premier.
-          </div>
-        )}
-
-        <div className="rounded-3xl border border-zinc-800 bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-transparent p-6 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Generate</p>
-              <h2 className="text-xl font-display text-white">Lancer un nouveau batch</h2>
+          {concept.batches.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-zinc-800/70 bg-zinc-950/40 p-6 text-zinc-400 text-sm">
+              Aucun batch pour ce concept. Lance une génération pour produire le premier.
             </div>
-            <Button
-              size="lg"
-              icon={<Sparkles className="w-4 h-4" />}
-              isLoading={isGenerating}
-              onClick={() => onGenerate(client.id, concept.id)}
-              disabled={!concept.brief.brandName.trim() || !concept.brief.productName.trim()}
-            >
-              Générer les Ads
-            </Button>
+          )}
+
+          <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-transparent p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Generate</p>
+                <h2 className="text-lg font-display text-white">Lancer un nouveau batch</h2>
+              </div>
+              <Button
+                size="lg"
+                icon={<Sparkles className="w-4 h-4" />}
+                isLoading={isGenerating}
+                onClick={() => onGenerate(client.id, concept.id)}
+                disabled={!concept.brief.brandName.trim() || !concept.brief.productName.trim()}
+              >
+                Générer les Ads
+              </Button>
+            </div>
           </div>
         </div>
       </div>

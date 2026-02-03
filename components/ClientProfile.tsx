@@ -9,7 +9,7 @@ interface ClientProfileProps {
 
 export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }) => {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
+    <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-200">Client</p>
@@ -30,7 +30,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
           <input
             value={client.name}
             onChange={(event) => onUpdate({ name: event.target.value })}
-            className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+            className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
             placeholder="Maison Aster"
           />
         </label>
@@ -40,7 +40,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
             <input
               value={client.brandName}
               onChange={(event) => onUpdate({ brandName: event.target.value })}
-              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
               placeholder="Nova Skincare"
             />
           </label>
@@ -49,7 +49,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
             <input
               value={client.industry}
               onChange={(event) => onUpdate({ industry: event.target.value })}
-              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+              className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
               placeholder="Beauté, retail, SaaS..."
             />
           </label>
@@ -59,7 +59,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({ client, onUpdate }
           <textarea
             value={client.notes}
             onChange={(event) => onUpdate({ notes: event.target.value })}
-            className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[90px]"
+            className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[90px]"
             placeholder="Positionnement, offre globale, contexte média..."
           />
         </label>

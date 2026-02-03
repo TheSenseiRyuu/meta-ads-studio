@@ -10,45 +10,51 @@ interface BatchListProps {
 
 export const BatchList: React.FC<BatchListProps> = ({ batches, selectedId, onSelect }) => {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-4 shadow-xl h-full flex flex-col">
+    <section className="w-full">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-200">Batches</p>
-          <h3 className="text-lg font-display text-white">Productions</h3>
+          <h3 className="text-xl font-display text-white">Productions</h3>
         </div>
         <History className="w-5 h-5 text-emerald-300" />
       </div>
 
       {batches.length === 0 ? (
-        <div className="flex-1 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-4 text-zinc-500 text-sm">
+        <div className="rounded-2xl border border-dashed border-zinc-800/70 bg-zinc-950/40 p-6 text-zinc-500 text-sm">
           Aucun batch. Lance une génération pour créer le premier.
         </div>
       ) : (
-        <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+        <div className="border-y border-zinc-800/80 divide-y divide-zinc-800/80">
           {batches.map((batch) => {
             const isActive = batch.id === selectedId;
             return (
               <button
                 key={batch.id}
                 onClick={() => onSelect(batch.id)}
-                className={`w-full text-left rounded-2xl border px-4 py-3 transition-colors ${
-                  isActive
-                    ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100'
-                    : 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-emerald-400/40'
+                className={`w-full text-left px-4 py-4 transition-colors ${
+                  isActive ? 'bg-emerald-500/10' : 'hover:bg-zinc-900/50'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-emerald-300" />
-                      <p className="text-sm font-display">{batch.name}</p>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-1 h-8 w-8 rounded-xl border ${
+                        isActive
+                          ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200'
+                          : 'border-zinc-800 bg-zinc-900/60 text-emerald-300'
+                      } flex items-center justify-center`}
+                    >
+                      <Sparkles className="w-4 h-4" />
                     </div>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {new Date(batch.createdAt).toLocaleString()}
-                    </p>
+                    <div>
+                      <p className="text-base font-display text-white">{batch.name}</p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {new Date(batch.createdAt).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-xs text-zinc-400 flex items-center gap-2">
-                    {batch.variants.length} ads
+                  <div className="text-xs text-zinc-400 flex items-center gap-3">
+                    <span>{batch.variants.length} ads</span>
                     <span className="flex items-center gap-1 text-emerald-300">
                       Ouvrir <ArrowRight className="w-3 h-3" />
                     </span>
@@ -59,6 +65,6 @@ export const BatchList: React.FC<BatchListProps> = ({ batches, selectedId, onSel
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 };

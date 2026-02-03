@@ -23,7 +23,7 @@ const ClientsPage: React.FC<ClientsPageProps> = ({ clients, onCreateClient, onSe
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto">
       <ClientList clients={clients} selectedId={undefined} onSelect={handleSelect} onCreate={handleCreate} />
     </div>
   );

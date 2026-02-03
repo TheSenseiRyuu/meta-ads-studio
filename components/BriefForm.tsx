@@ -57,7 +57,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
+      <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Brief</p>
@@ -100,7 +100,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                 <input
                   value={brief.brandName}
                   onChange={(e) => updateField('brandName', e.target.value)}
-                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
                   placeholder="Nova Skincare"
                 />
               </label>
@@ -109,7 +109,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                 <input
                   value={brief.productName}
                   onChange={(e) => updateField('productName', e.target.value)}
-                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
                   placeholder="Sérum Vitamin C"
                 />
               </label>
@@ -119,7 +119,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <input
                 value={brief.category}
                 onChange={(e) => updateField('category', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
                 placeholder="Skincare premium"
               />
             </label>
@@ -128,7 +128,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <textarea
                 value={brief.audience}
                 onChange={(e) => updateField('audience', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[90px]"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[90px]"
                 placeholder="Femmes 25-40, urbaines, sensibles aux ingrédients clean, achètent via Instagram."
               />
             </label>
@@ -142,7 +142,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <textarea
                 value={brief.painPoints}
                 onChange={(e) => updateField('painPoints', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none min-h-[90px]"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none min-h-[90px]"
                 placeholder="Teint terne, manque d'éclat, routine trop compliquée."
               />
             </label>
@@ -151,7 +151,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <textarea
                 value={brief.benefits}
                 onChange={(e) => updateField('benefits', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none min-h-[90px]"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none min-h-[90px]"
                 placeholder="Éclat visible en 7 jours, routine simple, texture légère."
               />
             </label>
@@ -160,7 +160,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <input
                 value={brief.offer}
                 onChange={(e) => updateField('offer', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
                 placeholder="-20% + livraison offerte"
               />
             </label>
@@ -169,7 +169,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <textarea
                 value={brief.differentiators}
                 onChange={(e) => updateField('differentiators', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none min-h-[80px]"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none min-h-[80px]"
                 placeholder="Formule clean, made in France, ingrédients traçables."
               />
             </label>
@@ -178,7 +178,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <input
                 value={brief.proof}
                 onChange={(e) => updateField('proof', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
                 placeholder="4.8/5 sur 2 000 avis"
               />
             </label>
@@ -193,7 +193,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                 <select
                   value={brief.objective}
                   onChange={(e) => updateField('objective', e.target.value as Objective)}
-                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
                 >
                   {objectiveOptions.map((option) => (
                     <option key={option} value={option}>
@@ -207,7 +207,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                 <select
                   value={brief.tone}
                   onChange={(e) => updateField('tone', e.target.value as Tone)}
-                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
                 >
                   {toneOptions.map((option) => (
                     <option key={option} value={option}>
@@ -266,7 +266,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <input
                 value={brief.language}
                 onChange={(e) => updateField('language', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
                 placeholder="Français"
               />
             </label>
@@ -276,7 +276,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <input
                 value={brief.budget}
                 onChange={(e) => updateField('budget', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
                 placeholder="2 000€/mois"
               />
             </label>
@@ -290,7 +290,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               <textarea
                 value={brief.constraints}
                 onChange={(e) => updateField('constraints', e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none min-h-[80px]"
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none min-h-[80px]"
                 placeholder="Pas de promesses médicales, éviter 'miracle', pas de comparatifs agressifs."
               />
             </label>
@@ -315,7 +315,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                   max={10}
                   value={brief.variants}
                   onChange={(e) => updateField('variants', Number(e.target.value))}
-                  className="w-20 rounded-lg border border-zinc-800 bg-zinc-900/70 px-2 py-1 text-xs text-white focus:border-emerald-400 focus:outline-none"
+                  className="w-20 rounded-lg border border-zinc-800 bg-zinc-950/50 px-2 py-1 text-xs text-white focus:border-emerald-400 focus:outline-none"
                 />
               </div>
             </div>

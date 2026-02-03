@@ -789,7 +789,7 @@ const AppShell: React.FC = () => {
           <div className="absolute top-20 right-0 w-96 h-96 bg-cyan-500/10 blur-[140px]" />
         </div>
 
-        <header className="relative z-10 px-6 md:px-12 py-6 flex items-center justify-between max-w-[1200px] mx-auto">
+        <header className="relative z-10 px-6 md:px-12 py-6 flex items-center justify-between max-w-[1600px] mx-auto">
           {routeType === 'clients' ? (
             <div className="flex-1"></div>
           ) : (

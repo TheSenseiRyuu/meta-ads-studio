@@ -30,15 +30,15 @@ const ClientPage: React.FC<ClientPageProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] items-start">
         <ClientProfile client={client} onUpdate={(updates) => onUpdateClient(client.id, updates)} />
 
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">Concepts</p>
-              <h3 className="text-lg font-display text-white">Espaces créatifs</h3>
+              <h3 className="text-xl font-display text-white">Espaces créatifs</h3>
             </div>
             <Button
               variant="secondary"
@@ -51,24 +51,30 @@ const ClientPage: React.FC<ClientPageProps> = ({
           </div>
 
           {client.concepts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6 text-zinc-500 text-sm">
+            <div className="rounded-2xl border border-dashed border-zinc-800/70 bg-zinc-950/40 p-6 text-zinc-500 text-sm">
               Aucun concept pour ce client. Crée le premier pour commencer.
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="border-y border-zinc-800/80 divide-y divide-zinc-800/80">
               {client.concepts.map((concept) => (
                 <button
                   key={concept.id}
                   onClick={() => handleSelectConcept(concept.id)}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 text-left hover:border-cyan-400/40 transition-colors"
+                  className="w-full text-left px-4 py-4 transition-colors hover:bg-zinc-900/50"
                 >
-                  <p className="text-sm font-display text-white">{concept.name}</p>
-                  <p className="text-xs text-zinc-500 mt-1">{concept.brief.category || 'Catégorie à définir'}</p>
-                  <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
-                    <span>{concept.batches.length} batches</span>
-                    <span className="flex items-center gap-1 text-cyan-300">
-                      Ouvrir <ArrowRight className="w-3 h-3" />
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-base font-display text-white">{concept.name}</p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {concept.brief.category || 'Catégorie à définir'}
+                      </p>
+                    </div>
+                    <div className="text-xs text-zinc-400 flex items-center gap-3">
+                      <span>{concept.batches.length} batches</span>
+                      <span className="flex items-center gap-1 text-cyan-300">
+                        Ouvrir <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
                   </div>
                 </button>
               ))}

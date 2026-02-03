@@ -9,7 +9,7 @@ interface ConceptPanelProps {
 
 export const ConceptPanel: React.FC<ConceptPanelProps> = ({ concept, onUpdate }) => {
   return (
-    <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
+    <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-200">Concept</p>
@@ -27,7 +27,7 @@ export const ConceptPanel: React.FC<ConceptPanelProps> = ({ concept, onUpdate })
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-zinc-200">
+          <span className="rounded-full border border-zinc-800 bg-zinc-950/50 px-3 py-1 text-zinc-200">
             {concept.batches.length} batches
           </span>
           <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-100">

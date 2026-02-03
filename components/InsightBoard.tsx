@@ -10,14 +10,14 @@ interface InsightBoardProps {
 export const InsightBoard: React.FC<InsightBoardProps> = ({ strategy, qa }) => {
   if (!strategy) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 text-zinc-500">
+      <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6 text-zinc-500">
         <p className="text-sm">La stratégie s'affichera ici après génération.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
+    <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Strategy</p>
