@@ -11,7 +11,7 @@ import { Button } from './components/Button';
 import { generateAds, generateVisual, getHealth, HealthStatus, setSettings } from './services/api';
 import { AdRun, AdVariant, BrandBrief, GenerationResponse, QualityAssurance, StrategyBoard, GeminiSettings } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Download, RefreshCw, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { Download, RefreshCw, ShieldCheck, Image as ImageIcon, Settings } from 'lucide-react';
 import { createId } from './utils/id';
 
 const defaultBrief: BrandBrief = {
@@ -62,6 +62,7 @@ const App: React.FC = () => {
   const [runs, setRuns] = useLocalStorage<AdRun[]>('meta-ads-history', []);
   const [settings, setSettingsState] = useLocalStorage<GeminiSettings>('meta-ads-settings', defaultSettings);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [loadingStep, setLoadingStep] = useState(1);
   const [loadingStatus, setLoadingStatus] = useState('Brief scan');
   const [visualLoadingId, setVisualLoadingId] = useState<string | null>(null);
@@ -278,6 +279,7 @@ const App: React.FC = () => {
       await setSettings(nextSettings);
       const updatedHealth = await getHealth();
       setHealth(updatedHealth);
+      setShowSettings(false);
     } catch (err: any) {
       setError(err?.message || 'Erreur mise à jour settings.');
     } finally {
@@ -318,6 +320,9 @@ const App: React.FC = () => {
             <div className="px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-300">
               {metaStatus}
             </div>
+            <div className="hidden lg:block text-[10px] text-zinc-500">
+              {settings.textModel} · {settings.imageModel} · {settings.imageSize}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -326,19 +331,20 @@ const App: React.FC = () => {
             >
               Reset
             </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Settings className="w-4 h-4" />}
+              onClick={() => setShowSettings(true)}
+            >
+              Settings
+            </Button>
           </div>
         </header>
 
         <main className="relative z-10 px-6 md:px-12 pb-16 grid grid-cols-1 xl:grid-cols-[1.2fr_1.8fr] gap-8 max-w-[1400px] mx-auto">
           <section className="space-y-6">
             <BriefForm brief={brief} onChange={setBrief} onGenerate={handleGenerate} isGenerating={isGenerating} />
-
-            <SettingsPanel
-              settings={settings}
-              onChange={setSettingsState}
-              onSave={handleSaveSettings}
-              isSaving={isSavingSettings}
-            />
 
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl">
               <div className="flex items-center justify-between mb-4">
@@ -419,6 +425,30 @@ const App: React.FC = () => {
         onDownloadVisual={downloadVisual}
         aspectRatio={brief.aspectRatio}
       />
+
+      {showSettings && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-950/95 shadow-2xl">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-800">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Settings</p>
+                <h3 className="text-lg font-display text-white">Configuration Gemini API</h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowSettings(false)}>
+                Fermer
+              </Button>
+            </div>
+            <div className="p-6">
+              <SettingsPanel
+                settings={settings}
+                onChange={setSettingsState}
+                onSave={handleSaveSettings}
+                isSaving={isSavingSettings}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
