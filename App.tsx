@@ -1,5 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useParams } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Link,
+  useLocation,
+  useParams,
+  useNavigate,
+} from 'react-router-dom';
 import IntroScreen from './components/IntroScreen';
 import { SettingsPanel } from './components/SettingsPanel';
 import { AdModal } from './components/AdModal';
@@ -180,6 +189,7 @@ const AppShell: React.FC = () => {
   const [visualBatchLoading, setVisualBatchLoading] = useState(false);
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setSelectedVariant(null);
@@ -644,6 +654,24 @@ const AppShell: React.FC = () => {
     return { clients, concepts, batches, variants };
   }, [workspace.clients]);
 
+  const step = useMemo(() => {
+    if (location.pathname.includes('/concept/')) return 3;
+    if (location.pathname.includes('/client/')) return 2;
+    return 1;
+  }, [location.pathname]);
+
+  const steps = [
+    { label: 'Clients', path: '/' },
+    {
+      label: 'Client',
+      path: activeClient ? `/client/${activeClient.id}` : null,
+    },
+    {
+      label: 'Concept',
+      path: activeClient && activeConcept ? `/client/${activeClient.id}/concept/${activeConcept.id}` : null,
+    },
+  ];
+
   const handleSaveSettings = async (nextSettings: GeminiSettings) => {
     setIsSavingSettings(true);
     setError(null);
@@ -789,6 +817,39 @@ const AppShell: React.FC = () => {
                 <span className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-zinc-200">
                   Batch: {activeBatch.name}
                 </span>
+              )}
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-zinc-500 uppercase tracking-[0.3em] text-[10px]">Navigation</span>
+              {steps.map((item, index) => {
+                const isActive = step === index + 1;
+                const isEnabled = Boolean(item.path);
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => item.path && navigate(item.path)}
+                    disabled={!isEnabled}
+                    className={`rounded-full border px-3 py-1 transition-colors ${
+                      isActive
+                        ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-100'
+                        : 'border-zinc-800 text-zinc-400 hover:border-emerald-400/40'
+                    } ${!isEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    {index + 1}. {item.label}
+                  </button>
+                );
+              })}
+              {step > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const prev = steps[step - 2];
+                    if (prev?.path) navigate(prev.path);
+                  }}
+                >
+                  Retour
+                </Button>
               )}
             </div>
           </div>

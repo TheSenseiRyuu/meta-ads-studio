@@ -1,7 +1,7 @@
 import React from 'react';
 import { Concept } from '../types';
 import { Button } from './Button';
-import { Layers, Plus } from 'lucide-react';
+import { Layers, Plus, ArrowRight } from 'lucide-react';
 
 interface ConceptListProps {
   concepts: Concept[];
@@ -68,8 +68,11 @@ export const ConceptList: React.FC<ConceptListProps> = ({
                       {concept.brief.category || 'Catégorie à définir'}
                     </p>
                   </div>
-                  <div className="text-xs text-zinc-400">
+                  <div className="text-xs text-zinc-400 flex items-center gap-2">
                     {concept.batches.length} batches
+                    <span className="flex items-center gap-1 text-cyan-300">
+                      Ouvrir <ArrowRight className="w-3 h-3" />
+                    </span>
                   </div>
                 </div>
               </button>

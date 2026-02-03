@@ -1,7 +1,7 @@
 import React from 'react';
 import { Client } from '../types';
 import { Button } from './Button';
-import { Building2, Plus } from 'lucide-react';
+import { Building2, Plus, ArrowRight } from 'lucide-react';
 
 interface ClientListProps {
   clients: Client[];
@@ -61,8 +61,11 @@ export const ClientList: React.FC<ClientListProps> = ({
                       {client.industry || 'Industrie à préciser'}
                     </p>
                   </div>
-                  <div className="text-xs text-zinc-400">
+                  <div className="text-xs text-zinc-400 flex items-center gap-2">
                     {client.concepts.length} concepts
+                    <span className="flex items-center gap-1 text-emerald-300">
+                      Ouvrir <ArrowRight className="w-3 h-3" />
+                    </span>
                   </div>
                 </div>
               </button>

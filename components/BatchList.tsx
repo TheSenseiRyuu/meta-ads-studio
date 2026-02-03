@@ -1,6 +1,6 @@
 import React from 'react';
 import { Batch } from '../types';
-import { Sparkles, History } from 'lucide-react';
+import { Sparkles, History, ArrowRight } from 'lucide-react';
 
 interface BatchListProps {
   batches: Batch[];
@@ -47,7 +47,12 @@ export const BatchList: React.FC<BatchListProps> = ({ batches, selectedId, onSel
                       {new Date(batch.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <div className="text-xs text-zinc-400">{batch.variants.length} ads</div>
+                  <div className="text-xs text-zinc-400 flex items-center gap-2">
+                    {batch.variants.length} ads
+                    <span className="flex items-center gap-1 text-emerald-300">
+                      Ouvrir <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
                 </div>
               </button>
             );
