@@ -1,9 +1,4 @@
-export type Objective =
-  | 'Sales'
-  | 'Leads'
-  | 'Traffic'
-  | 'App Installs'
-  | 'Awareness';
+export type Objective = 'Sales' | 'Leads' | 'Traffic' | 'App Installs' | 'Awareness';
 
 export type Placement = 'Feed' | 'Reels' | 'Stories' | 'Explore' | 'Messenger';
 export type AspectRatio = 'Auto' | '1:1' | '4:5' | '9:16' | '1.91:1';
@@ -22,21 +17,8 @@ export interface GeminiModelOption {
   supportedGenerationMethods?: string[];
   isImage: boolean;
 }
-export interface GeminiSettings {
-  apiKey: string;
-  textModel: string;
-  imageModel: string;
-  imageSize: '2K' | '4K';
-}
 
-export type Tone =
-  | 'Bold'
-  | 'Playful'
-  | 'Minimal'
-  | 'Luxury'
-  | 'Direct'
-  | 'Warm'
-  | 'Technical';
+export type Tone = 'Bold' | 'Playful' | 'Minimal' | 'Luxury' | 'Direct' | 'Warm' | 'Technical';
 
 export interface BrandBrief {
   brandName: string;
@@ -110,4 +92,45 @@ export interface AdRun {
   variants: AdVariant[];
   strategy: StrategyBoard;
   qa: QualityAssurance;
+}
+
+export interface Batch {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  strategy: StrategyBoard | null;
+  qa: QualityAssurance | null;
+  variants: AdVariant[];
+}
+
+export interface Concept {
+  id: string;
+  name: string;
+  brief: BrandBrief;
+  createdAt: number;
+  updatedAt: number;
+  batches: Batch[];
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  brandName: string;
+  industry: string;
+  notes: string;
+  createdAt: number;
+  updatedAt: number;
+  concepts: Concept[];
+}
+
+export interface WorkspaceSelection {
+  clientId?: string;
+  conceptId?: string;
+  batchId?: string;
+}
+
+export interface Workspace {
+  clients: Client[];
+  selection: WorkspaceSelection;
 }

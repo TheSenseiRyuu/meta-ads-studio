@@ -8,6 +8,7 @@ interface BriefFormProps {
   onChange: (brief: BrandBrief) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  showGenerate?: boolean;
 }
 
 const placementOptions: Placement[] = ['Feed', 'Reels', 'Stories', 'Explore', 'Messenger'];
@@ -21,7 +22,13 @@ const aspectRatioOptions: { value: AspectRatio; label: string; hint: string }[] 
   { value: '1.91:1', label: '1.91:1', hint: 'Landscape' },
 ];
 
-export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerate, isGenerating }) => {
+export const BriefForm: React.FC<BriefFormProps> = ({
+  brief,
+  onChange,
+  onGenerate,
+  isGenerating,
+  showGenerate = true,
+}) => {
   const sections = useMemo(
     () => [
       { id: 'brand', label: 'Brand', hint: 'Identité & audience' },
@@ -343,23 +350,25 @@ export const BriefForm: React.FC<BriefFormProps> = ({ brief, onChange, onGenerat
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-transparent p-6 shadow-xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Generate</p>
-            <h2 className="text-xl font-display text-white">Lancer la création</h2>
+      {showGenerate && (
+        <div className="rounded-2xl border border-zinc-800 bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-transparent p-6 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Generate</p>
+              <h2 className="text-xl font-display text-white">Lancer la création</h2>
+            </div>
+            <Button
+              size="lg"
+              icon={<Megaphone className="w-4 h-4" />}
+              isLoading={isGenerating}
+              onClick={onGenerate}
+              disabled={!canGenerate}
+            >
+              Générer les Ads
+            </Button>
           </div>
-          <Button
-            size="lg"
-            icon={<Megaphone className="w-4 h-4" />}
-            isLoading={isGenerating}
-            onClick={onGenerate}
-            disabled={!canGenerate}
-          >
-            Générer les Ads
-          </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

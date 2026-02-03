@@ -16,10 +16,10 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
     }
 
     const timers = [
-      setTimeout(() => setPhase(1), 300),
-      setTimeout(() => setPhase(2), 900),
-      setTimeout(() => setPhase(3), 1400),
-      setTimeout(() => onComplete(), 1800),
+      setTimeout(() => setPhase(1), 150),
+      setTimeout(() => setPhase(2), 400),
+      setTimeout(() => setPhase(3), 700),
+      setTimeout(() => onComplete(), 900),
     ];
 
     return () => timers.forEach(clearTimeout);
