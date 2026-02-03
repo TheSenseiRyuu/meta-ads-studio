@@ -4,7 +4,7 @@ import { InsightBoard } from '../components/InsightBoard';
 import { AdGrid } from '../components/AdGrid';
 import { Button } from '../components/Button';
 import Loading from '../components/Loading';
-import { Download, Image as ImageIcon, Sparkles, Eye } from 'lucide-react';
+import { Download, Image as ImageIcon, Sparkles, Eye, Copy, Layers } from 'lucide-react';
 import { BriefForm } from '../components/BriefForm';
 
 interface BatchPageProps {
@@ -17,6 +17,8 @@ interface BatchPageProps {
   onExportJson: (context: { clientId: string; conceptId: string; batchId: string }) => void;
   onUpdateBrief: (updates: Partial<Batch>) => void;
   onGenerateBrief: () => void;
+  onDuplicateBrief: () => void;
+  onRegenerateBrief: () => void;
   isGenerating: boolean;
   visualBatchLoading: boolean;
   loadingStatus: string;
@@ -34,6 +36,8 @@ const BatchPage: React.FC<BatchPageProps> = ({
   onExportJson,
   onUpdateBrief,
   onGenerateBrief,
+  onDuplicateBrief,
+  onRegenerateBrief,
   isGenerating,
   visualBatchLoading,
   loadingStatus,
@@ -47,37 +51,82 @@ const BatchPage: React.FC<BatchPageProps> = ({
   );
   const canGenerate = Boolean(batch.brief.brandName.trim() && batch.brief.productName.trim());
 
+  const copyAllAds = async () => {
+    const lines = batch.variants.map((variant, index) => {
+      const headline = variant.headline || variant.headlineVariants?.[0] || '';
+      const description = variant.description || variant.descriptionVariants?.[0] || '';
+      const primary = variant.primaryText || variant.primaryTextVariants?.[0] || '';
+      return `#${index + 1} ${variant.name}
+Placement: ${variant.placement}
+Primary text: ${primary}
+Headline: ${headline}
+Description: ${description}
+CTA: ${variant.cta}
+URL: ${variant.destinationUrl || ''}
+Display link: ${variant.displayLink || ''}
+`;
+    });
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(lines.join('\n'));
+    }
+  };
+
   return (
     <div className="w-full max-w-[1600px] mx-auto space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Brief</p>
-          <h2 className="text-2xl font-display text-white">{batch.name}</h2>
-          <p className="text-xs text-zinc-500 mt-1">
-            Créé le {new Date(batch.createdAt).toLocaleString()}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<ImageIcon className="w-4 h-4" />}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Brief</p>
+            <h2 className="text-2xl font-display text-white">{batch.name}</h2>
+            <p className="text-xs text-zinc-500 mt-1">
+              Créé le {new Date(batch.createdAt).toLocaleString()}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Layers className="w-4 h-4" />}
+              onClick={onDuplicateBrief}
+            >
+              Dupliquer
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Sparkles className="w-4 h-4" />}
+              onClick={onRegenerateBrief}
+            >
+              Regénérer (copie)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<ImageIcon className="w-4 h-4" />}
             onClick={() => onGenerateAllVisuals(context)}
             isLoading={visualBatchLoading}
             disabled={batch.variants.length === 0}
           >
             Générer les visuels
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Download className="w-4 h-4" />}
-            onClick={() => onExportJson(context)}
-          >
-            Export JSON
-          </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Download className="w-4 h-4" />}
+              onClick={() => onExportJson(context)}
+            >
+              Export JSON
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Copy className="w-4 h-4" />}
+              onClick={copyAllAds}
+              disabled={batch.variants.length === 0}
+            >
+              Copier les ads
+            </Button>
+          </div>
         </div>
-      </div>
 
       <div className="grid gap-10 lg:grid-cols-[420px_1fr] items-start">
         <div className="space-y-4">

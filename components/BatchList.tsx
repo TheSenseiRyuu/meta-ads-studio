@@ -54,6 +54,15 @@ export const BatchList: React.FC<BatchListProps> = ({ batches, selectedId, onSel
                     </div>
                   </div>
                   <div className="text-xs text-zinc-400 flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-2 py-0.5 border ${
+                        batch.variants.length
+                          ? 'border-emerald-400/40 text-emerald-200'
+                          : 'border-zinc-600 text-zinc-400'
+                      }`}
+                    >
+                      {batch.variants.length ? 'Généré' : 'Draft'}
+                    </span>
                     <span>{batch.variants.length} ads</span>
                     <span className="flex items-center gap-1 text-emerald-300">
                       Ouvrir <ArrowRight className="w-3 h-3" />

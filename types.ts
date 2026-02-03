@@ -38,6 +38,26 @@ export interface BrandBrief {
   language: string;
   variants: number;
   budget: string;
+  adFormat: 'Single Image' | 'Single Video' | 'Carousel' | 'Collection';
+  destinationUrl: string;
+  displayLink: string;
+  trackingParams: string;
+  ctaPreference: string;
+  primaryTextVariations: number;
+  headlineVariations: number;
+  descriptionVariations: number;
+  includeEmojis: boolean;
+  includeHashtags: boolean;
+  hashtags: string;
+  includePrice: boolean;
+  price: string;
+  promoEndDate: string;
+  includeTestimonial: boolean;
+  testimonial: string;
+  leadMagnet: string;
+  appName: string;
+  appStoreUrl: string;
+  creativeNotes: string;
 }
 
 export interface StrategyBoard {
@@ -58,9 +78,15 @@ export interface AdVariant {
   objective: Objective;
   format: string;
   primaryText: string;
+  primaryTextVariants?: string[];
   headline: string;
+  headlineVariants?: string[];
   description: string;
+  descriptionVariants?: string[];
   cta: string;
+  destinationUrl?: string;
+  displayLink?: string;
+  trackingParams?: string;
   hook: string;
   visualConcept: string;
   imagePrompt: string;
@@ -68,6 +94,7 @@ export interface AdVariant {
   offer: string;
   tone: string;
   keywords: string[];
+  hashtags?: string[];
   favorite?: boolean;
   visualImage?: string;
   visualMimeType?: string;

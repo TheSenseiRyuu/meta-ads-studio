@@ -43,7 +43,30 @@ const createId = () => {
 const normalizeVariants = (data, brief) => {
   if (!data?.variants || !Array.isArray(data.variants)) return data;
   const fallbackPlacement = brief?.placements?.[0] || 'Feed';
-  const allowedCtas = new Set(['Shop Now', 'Learn More', 'Sign Up', 'Get Quote', 'Download']);
+  const allowedCtas = new Set([
+    'Shop Now',
+    'Learn More',
+    'Sign Up',
+    'Get Quote',
+    'Download',
+    'Book Now',
+    'Get Offer',
+    'Contact Us',
+    'Send Message',
+    'Apply Now',
+  ]);
+
+  const preferredCta = allowedCtas.has(brief?.ctaPreference) ? brief.ctaPreference : null;
+  const defaultDisplayLink = (() => {
+    try {
+      if (brief?.displayLink) return brief.displayLink;
+      if (!brief?.destinationUrl) return '';
+      const url = new URL(brief.destinationUrl);
+      return url.hostname.replace(/^www\./, '');
+    } catch {
+      return brief?.displayLink || '';
+    }
+  })();
 
   return {
     ...data,
@@ -56,13 +79,41 @@ const normalizeVariants = (data, brief) => {
             .split(',')
             .map((item) => item.trim())
             .filter(Boolean);
+      const hashtags = Array.isArray(variant.hashtags)
+        ? variant.hashtags
+        : String(variant.hashtags || '')
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+      const primaryTextVariants = Array.isArray(variant.primaryTextVariants)
+        ? variant.primaryTextVariants
+        : variant.primaryText
+          ? [variant.primaryText]
+          : [];
+      const headlineVariants = Array.isArray(variant.headlineVariants)
+        ? variant.headlineVariants
+        : variant.headline
+          ? [variant.headline]
+          : [];
+      const descriptionVariants = Array.isArray(variant.descriptionVariants)
+        ? variant.descriptionVariants
+        : variant.description
+          ? [variant.description]
+          : [];
       return {
         ...variant,
         id: variant.id || `${createId()}-${index + 1}`,
         placement,
         format,
         keywords,
-        cta: allowedCtas.has(variant.cta) ? variant.cta : 'Learn More',
+        hashtags,
+        cta: allowedCtas.has(variant.cta) ? variant.cta : preferredCta || 'Learn More',
+        primaryTextVariants,
+        headlineVariants,
+        descriptionVariants,
+        destinationUrl: variant.destinationUrl || brief?.destinationUrl || '',
+        displayLink: variant.displayLink || defaultDisplayLink || '',
+        trackingParams: variant.trackingParams || brief?.trackingParams || '',
         offer: variant.offer || '',
         proof: variant.proof || '',
         visualConcept: variant.visualConcept || `${variant.headline} - ${variant.primaryText}`,

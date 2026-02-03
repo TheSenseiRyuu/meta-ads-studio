@@ -1,7 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { BrandBrief, Placement, Tone, Objective, AspectRatio } from '../types';
 import { Button } from './Button';
-import { Sparkles, Zap, Megaphone, SlidersHorizontal, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
+import {
+  Sparkles,
+  Megaphone,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  Link2,
+  SlidersHorizontal,
+} from 'lucide-react';
 
 interface BriefFormProps {
   brief: BrandBrief;
@@ -21,6 +29,25 @@ const aspectRatioOptions: { value: AspectRatio; label: string; hint: string }[] 
   { value: '9:16', label: '9:16', hint: 'Stories / Reels' },
   { value: '1.91:1', label: '1.91:1', hint: 'Landscape' },
 ];
+const adFormatOptions: BrandBrief['adFormat'][] = [
+  'Single Image',
+  'Single Video',
+  'Carousel',
+  'Collection',
+];
+const ctaOptions = [
+  'Auto',
+  'Shop Now',
+  'Learn More',
+  'Sign Up',
+  'Get Quote',
+  'Download',
+  'Book Now',
+  'Get Offer',
+  'Contact Us',
+  'Send Message',
+  'Apply Now',
+];
 
 export const BriefForm: React.FC<BriefFormProps> = ({
   brief,
@@ -34,7 +61,10 @@ export const BriefForm: React.FC<BriefFormProps> = ({
       { id: 'brand', label: 'Brand', hint: 'Identité & audience' },
       { id: 'offer', label: 'Offer', hint: 'Bénéfices & preuves' },
       { id: 'campaign', label: 'Campaign', hint: 'Objectifs & placements' },
-      { id: 'compliance', label: 'Compliance', hint: 'Contraintes & volume' },
+      { id: 'destination', label: 'Destination', hint: 'URL & CTA' },
+      { id: 'variations', label: 'Variations', hint: 'Ads & textes' },
+      { id: 'optional', label: 'Options', hint: 'Extras' },
+      { id: 'compliance', label: 'Compliance', hint: 'Contraintes' },
     ],
     []
   );
@@ -129,7 +159,7 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                 value={brief.audience}
                 onChange={(e) => updateField('audience', e.target.value)}
                 className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[90px]"
-                placeholder="Femmes 25-40, urbaines, sensibles aux ingrédients clean, achètent via Instagram."
+                placeholder="Femmes 25-40, urbaines, sensibles aux ingrédients clean."
               />
             </label>
           </div>
@@ -283,6 +313,269 @@ export const BriefForm: React.FC<BriefFormProps> = ({
           </div>
         )}
 
+        {activeSection === 'destination' && (
+          <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm text-zinc-300">
+                Format d’annonce
+                <select
+                  value={brief.adFormat}
+                  onChange={(e) => updateField('adFormat', e.target.value as BrandBrief['adFormat'])}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                >
+                  {adFormatOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm text-zinc-300">
+                CTA préféré
+                <select
+                  value={brief.ctaPreference || 'Auto'}
+                  onChange={(e) =>
+                    updateField('ctaPreference', e.target.value === 'Auto' ? '' : e.target.value)
+                  }
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                >
+                  {ctaOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="text-sm text-zinc-300">
+              URL de destination
+              <div className="mt-2 flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-emerald-300" />
+                <input
+                  value={brief.destinationUrl}
+                  onChange={(e) => updateField('destinationUrl', e.target.value)}
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  placeholder="https://..."
+                />
+              </div>
+            </label>
+
+            <label className="text-sm text-zinc-300">
+              Display link (optionnel)
+              <input
+                value={brief.displayLink}
+                onChange={(e) => updateField('displayLink', e.target.value)}
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                placeholder="brand.com"
+              />
+            </label>
+
+            <label className="text-sm text-zinc-300">
+              Tracking params / UTM (optionnel)
+              <input
+                value={brief.trackingParams}
+                onChange={(e) => updateField('trackingParams', e.target.value)}
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                placeholder="utm_source=meta&utm_medium=paid_social"
+              />
+            </label>
+
+            {brief.objective === 'Leads' && (
+              <label className="text-sm text-zinc-300">
+                Lead magnet / promesse formulaire
+                <input
+                  value={brief.leadMagnet}
+                  onChange={(e) => updateField('leadMagnet', e.target.value)}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  placeholder="Checklist, audit, demo..."
+                />
+              </label>
+            )}
+
+            {brief.objective === 'App Installs' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="text-sm text-zinc-300">
+                  Nom de l’app
+                  <input
+                    value={brief.appName}
+                    onChange={(e) => updateField('appName', e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                    placeholder="App name"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Lien App Store / Play Store
+                  <input
+                    value={brief.appStoreUrl}
+                    onChange={(e) => updateField('appStoreUrl', e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                    placeholder="https://..."
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeSection === 'variations' && (
+          <div className="grid gap-4">
+            <label className="text-sm text-zinc-300">
+              Nombre de variantes d’annonces
+              <input
+                type="range"
+                min={1}
+                max={12}
+                value={brief.variants}
+                onChange={(e) => updateField('variants', Number(e.target.value))}
+                className="mt-3 w-full accent-emerald-400"
+              />
+            </label>
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span>Variantes : {brief.variants}</span>
+              <span>CTA & placements répartis automatiquement</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <label className="text-sm text-zinc-300">
+                Variations Primary Text
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={brief.primaryTextVariations}
+                  onChange={(e) => updateField('primaryTextVariations', Number(e.target.value))}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                />
+              </label>
+              <label className="text-sm text-zinc-300">
+                Variations Headline
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={brief.headlineVariations}
+                  onChange={(e) => updateField('headlineVariations', Number(e.target.value))}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                />
+              </label>
+              <label className="text-sm text-zinc-300">
+                Variations Description
+                <input
+                  type="number"
+                  min={1}
+                  max={4}
+                  value={brief.descriptionVariations}
+                  onChange={(e) => updateField('descriptionVariations', Number(e.target.value))}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                />
+              </label>
+            </div>
+            <p className="text-xs text-zinc-500">
+              Reco: primary text ≤ 125 caractères, headline ≤ 40, description ≤ 30 pour éviter la
+              troncature selon les placements.
+            </p>
+          </div>
+        )}
+
+        {activeSection === 'optional' && (
+          <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="flex items-center gap-3 text-sm text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={brief.includeEmojis}
+                  onChange={(e) => updateField('includeEmojis', e.target.checked)}
+                />
+                Autoriser emojis dans la copy
+              </label>
+              <label className="flex items-center gap-3 text-sm text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={brief.includeHashtags}
+                  onChange={(e) => updateField('includeHashtags', e.target.checked)}
+                />
+                Ajouter hashtags
+              </label>
+            </div>
+
+            {brief.includeHashtags && (
+              <label className="text-sm text-zinc-300">
+                Hashtags suggérés
+                <input
+                  value={brief.hashtags}
+                  onChange={(e) => updateField('hashtags', e.target.value)}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                  placeholder="#skincare #glow #cleanbeauty"
+                />
+              </label>
+            )}
+
+            <label className="flex items-center gap-3 text-sm text-zinc-300">
+              <input
+                type="checkbox"
+                checked={brief.includePrice}
+                onChange={(e) => updateField('includePrice', e.target.checked)}
+              />
+              Mentionner un prix / promo
+            </label>
+
+            {brief.includePrice && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="text-sm text-zinc-300">
+                  Prix / promo
+                  <input
+                    value={brief.price}
+                    onChange={(e) => updateField('price', e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                    placeholder="39€ au lieu de 49€"
+                  />
+                </label>
+                <label className="text-sm text-zinc-300">
+                  Fin de promo
+                  <input
+                    value={brief.promoEndDate}
+                    onChange={(e) => updateField('promoEndDate', e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                    placeholder="31/03"
+                  />
+                </label>
+              </div>
+            )}
+
+            <label className="flex items-center gap-3 text-sm text-zinc-300">
+              <input
+                type="checkbox"
+                checked={brief.includeTestimonial}
+                onChange={(e) => updateField('includeTestimonial', e.target.checked)}
+              />
+              Ajouter un témoignage
+            </label>
+
+            {brief.includeTestimonial && (
+              <label className="text-sm text-zinc-300">
+                Témoignage (optionnel)
+                <textarea
+                  value={brief.testimonial}
+                  onChange={(e) => updateField('testimonial', e.target.value)}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[80px]"
+                  placeholder="“Ma peau a retrouvé de l'éclat en 7 jours.”"
+                />
+              </label>
+            )}
+
+            <label className="text-sm text-zinc-300">
+              Notes créatives / contraintes additionnelles
+              <textarea
+                value={brief.creativeNotes}
+                onChange={(e) => updateField('creativeNotes', e.target.value)}
+                className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none min-h-[80px]"
+                placeholder="Ex: ton ultra minimal, pas de promesses médicales."
+              />
+            </label>
+          </div>
+        )}
+
         {activeSection === 'compliance' && (
           <div className="grid gap-4">
             <label className="text-sm text-zinc-300">
@@ -294,30 +587,9 @@ export const BriefForm: React.FC<BriefFormProps> = ({
                 placeholder="Pas de promesses médicales, éviter 'miracle', pas de comparatifs agressifs."
               />
             </label>
-
-            <div className="flex items-center justify-between gap-4">
-              <label className="text-sm text-zinc-300 flex-1">
-                Nombre de variantes
-                <input
-                  type="range"
-                  min={1}
-                  max={10}
-                  value={brief.variants}
-                  onChange={(e) => updateField('variants', Number(e.target.value))}
-                  className="mt-3 w-full accent-emerald-400"
-                />
-              </label>
-              <div className="flex flex-col items-end gap-2">
-                <div className="text-2xl font-display text-white">{brief.variants}</div>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={brief.variants}
-                  onChange={(e) => updateField('variants', Number(e.target.value))}
-                  className="w-20 rounded-lg border border-zinc-800 bg-zinc-950/50 px-2 py-1 text-xs text-white focus:border-emerald-400 focus:outline-none"
-                />
-              </div>
+            <div className="flex items-center gap-2 text-xs text-zinc-400">
+              <SlidersHorizontal className="w-4 h-4" />
+              Pense à préciser les claims acceptés (ex: “testé dermatologiquement”).
             </div>
           </div>
         )}
@@ -341,7 +613,9 @@ export const BriefForm: React.FC<BriefFormProps> = ({
               variant="secondary"
               size="sm"
               icon={<ChevronRight className="w-4 h-4" />}
-              onClick={() => setActiveSection(sections[currentIndex + 1]?.id || sections[sections.length - 1].id)}
+              onClick={() =>
+                setActiveSection(sections[currentIndex + 1]?.id || sections[sections.length - 1].id)
+              }
               disabled={!canNext}
             >
               Suivant

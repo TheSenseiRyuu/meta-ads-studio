@@ -55,6 +55,26 @@ const defaultBrief: BrandBrief = {
   language: 'Français',
   variants: 6,
   budget: '2 000€/mois',
+  adFormat: 'Single Image',
+  destinationUrl: '',
+  displayLink: '',
+  trackingParams: '',
+  ctaPreference: '',
+  primaryTextVariations: 3,
+  headlineVariations: 3,
+  descriptionVariations: 2,
+  includeEmojis: false,
+  includeHashtags: false,
+  hashtags: '',
+  includePrice: false,
+  price: '',
+  promoEndDate: '',
+  includeTestimonial: false,
+  testimonial: '',
+  leadMagnet: '',
+  appName: '',
+  appStoreUrl: '',
+  creativeNotes: '',
 };
 
 const defaultSettings: GeminiSettings = {
@@ -116,6 +136,21 @@ const createBriefDraft = (brief: BrandBrief, index: number): Batch => ({
   strategy: null,
   qa: null,
   variants: [],
+});
+
+const createBriefFromResponse = (
+  brief: BrandBrief,
+  payload: GenerationResponse,
+  index: number
+): Batch => ({
+  id: createId(),
+  name: `Brief ${String(index).padStart(2, '0')} · ${new Date().toLocaleDateString()}`,
+  brief: normalizeBrief(brief),
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  strategy: payload.strategy,
+  qa: payload.qa,
+  variants: payload.variants,
 });
 
 const buildInitialWorkspace = (): Workspace => {
@@ -498,6 +533,90 @@ const AppShell: React.FC = () => {
     return newBrief;
   };
 
+  const handleDuplicateBrief = (clientId: string, conceptId: string, briefId: string) => {
+    const client = workspace.clients.find((item) => item.id === clientId);
+    const concept = client?.concepts.find((item) => item.id === conceptId);
+    const brief = concept?.batches.find((item) => item.id === briefId);
+    if (!client || !concept || !brief) return null;
+    const nextIndex = concept.batches.length + 1;
+    const newBrief: Batch = {
+      ...brief,
+      id: createId(),
+      name: `Brief ${String(nextIndex).padStart(2, '0')} · ${new Date().toLocaleDateString()}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      brief: normalizeBrief(brief.brief),
+    };
+    setWorkspace((prev) => ({
+      ...prev,
+      clients: prev.clients.map((item) =>
+        item.id === clientId
+          ? {
+              ...item,
+              updatedAt: Date.now(),
+              concepts: item.concepts.map((conceptItem) =>
+                conceptItem.id === conceptId
+                  ? {
+                      ...conceptItem,
+                      updatedAt: Date.now(),
+                      batches: [newBrief, ...conceptItem.batches],
+                    }
+                  : conceptItem
+              ),
+            }
+          : item
+      ),
+      selection: { clientId, conceptId, batchId: newBrief.id },
+    }));
+    return newBrief;
+  };
+
+  const handleRegenerateBrief = async (clientId: string, conceptId: string, briefId: string) => {
+    const client = workspace.clients.find((item) => item.id === clientId);
+    const concept = client?.concepts.find((item) => item.id === conceptId);
+    const brief = concept?.batches.find((item) => item.id === briefId);
+    if (!client || !concept || !brief) return null;
+
+    setIsGenerating(true);
+    setError(null);
+    try {
+      if (!settings.apiKey) {
+        throw new Error('Ajoute ta clé Gemini API dans Settings.');
+      }
+      const response: GenerationResponse = await generateAds(brief.brief);
+      const nextIndex = concept.batches.length + 1;
+      const newBrief = createBriefFromResponse(brief.brief, response, nextIndex);
+
+      setWorkspace((prev) => ({
+        ...prev,
+        clients: prev.clients.map((item) =>
+          item.id === clientId
+            ? {
+                ...item,
+                updatedAt: Date.now(),
+                concepts: item.concepts.map((conceptItem) =>
+                  conceptItem.id === conceptId
+                    ? {
+                        ...conceptItem,
+                        updatedAt: Date.now(),
+                        batches: [newBrief, ...conceptItem.batches],
+                      }
+                    : conceptItem
+                ),
+              }
+            : item
+        ),
+        selection: { clientId, conceptId, batchId: newBrief.id },
+      }));
+      return newBrief;
+    } catch (err: any) {
+      setError(err?.message || 'Erreur lors de la génération.');
+      return null;
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleSelectBatch = (clientId: string, conceptId: string, batchId: string) => {
     setWorkspace((prev) => {
       if (
@@ -711,6 +830,18 @@ const AppShell: React.FC = () => {
     setSelectedContext(context);
   };
 
+  const handleUpdateVariant = (
+    context: { clientId: string; conceptId: string; batchId: string },
+    updated: AdVariant
+  ) => {
+    updateBatchVariants(context.clientId, context.conceptId, context.batchId, (variants) =>
+      variants.map((variant) => (variant.id === updated.id ? { ...variant, ...updated } : variant))
+    );
+    if (selectedVariant?.id === updated.id) {
+      setSelectedVariant(updated);
+    }
+  };
+
   const routeType = useMemo(() => {
     if (location.pathname.includes('/settings')) return 'settings';
     if (location.pathname.includes('/brief/')) return 'brief';
@@ -850,6 +981,18 @@ const AppShell: React.FC = () => {
         onExportJson={exportJson}
         onUpdateBrief={(updates) => updateBatch(clientId, conceptId, batch.id, updates)}
         onGenerateBrief={() => handleGenerateBrief(clientId, conceptId, batch.id)}
+        onDuplicateBrief={() => {
+          const newBrief = handleDuplicateBrief(clientId, conceptId, batch.id);
+          if (newBrief) {
+            navigate(`/client/${clientId}/concept/${conceptId}/brief/${newBrief.id}`);
+          }
+        }}
+        onRegenerateBrief={async () => {
+          const newBrief = await handleRegenerateBrief(clientId, conceptId, batch.id);
+          if (newBrief) {
+            navigate(`/client/${clientId}/concept/${conceptId}/brief/${newBrief.id}`);
+          }
+        }}
       />
     );
   };
@@ -956,6 +1099,7 @@ const AppShell: React.FC = () => {
         onGenerateVisual={(variant) => selectedContext && handleGenerateVisual(selectedContext, variant)}
         isGeneratingVisual={visualLoadingId === selectedVariant?.id}
         onDownloadVisual={downloadVisual}
+        onUpdateVariant={(variant) => selectedContext && handleUpdateVariant(selectedContext, variant)}
         aspectRatio={selectedBatchForModal?.brief.aspectRatio || 'Auto'}
       />
 
